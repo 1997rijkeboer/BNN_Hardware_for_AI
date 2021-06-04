@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
+import conv as layers
+import larq as lq
 
 from tensorflow.keras.datasets import mnist
 
@@ -84,37 +86,71 @@ def show_predictions(predictions, test_images, test_labels):
 
 def main():
 
-    (train_images, train_labels), (test_images, test_labels) = mnist.load_data()
+    num_classes = 10
+    input_shape = (28, 28, 1)
 
-    # show_data(train_images, train_labels, test_images, test_labels)
+    (X_train, Y_train), (X_test, Y_test) = mnist.load_data()
+    X_train = X_train.reshape((60000, 28, 28, 1))
+    X_test = X_test.reshape((10000, 28, 28, 1))
+    X_train, X_test = X_train / 127.5 - 1, X_test / 127.5 - 1
 
-    model = tf.keras.Sequential([
-        #input layer
-        tf.keras.layers.Flatten(input_shape=(28, 28)),
-        #intermediate ;ayers
-        tf.keras.layers.Dense(128, activation='relu'),
-        tf.keras.layers.Dense(10)
-    ])
+    kwargs = dict(input_quantizer="ste_sign",
+              kernel_quantizer="ste_sign",
+              kernel_constraint="weight_clip")
 
-    #model parameters
-    model.compile(optimizer='adam',
-                  loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+    model = tf.keras.Sequential()
+    model.add(lq.layers.QuantConv2D(32, (3, 3),
+                                kernel_quantizer="ste_sign",
+                                kernel_constraint="weight_clip",
+                                use_bias=False,
+                                input_shape=(28, 28, 1)))
+    model.add(tf.keras.layers.MaxPooling2D((2, 2)))
+    model.add(tf.keras.layers.BatchNormalization(scale=False))
+
+    model.add(lq.layers.QuantConv2D(64, (3, 3), use_bias=False, **kwargs))
+    model.add(tf.keras.layers.MaxPooling2D((2, 2)))
+    model.add(tf.keras.layers.BatchNormalization(scale=False))
+    #
+    model.add(lq.layers.QuantConv2D(64, (3, 3), use_bias=False, **kwargs))
+    model.add(tf.keras.layers.BatchNormalization(scale=False))
+    model.add(tf.keras.layers.Flatten())
+    #
+    model.add(lq.layers.QuantDense(64, use_bias=False, **kwargs))
+    model.add(tf.keras.layers.BatchNormalization(scale=False))
+    model.add(lq.layers.QuantDense(10, use_bias=False, **kwargs))
+    model.add(tf.keras.layers.BatchNormalization(scale=False))
+    model.add(tf.keras.layers.Activation("softmax"))
+
+    lq.models.summary(model)
+
+    optimizer = lq.optimizers.CaseOptimizer(
+    (lq.optimizers.Bop.is_binary_variable, lq.optimizers.Bop()),
+    default_optimizer=tf.keras.optimizers.Adam(0.01),
+    )
+
+    model.compile(optimizer=optimizer,
+                  loss='sparse_categorical_crossentropy',
                   metrics=['accuracy'])
 
-    #Feed data
-    model.fit(train_images, train_labels, epochs=10)
-    #summary of the model
-    model.summary()
-    #train the nn
-    test_loss, test_acc = model.evaluate(test_images,  test_labels, verbose=2)
+    history = model.fit(X_train, Y_train, batch_size=64, epochs=1)
+    test_loss, test_acc = model.evaluate(X_test, Y_test)
     print('\nAccuracy:', test_acc)
 
-    # #output layer
-    probability_model = tf.keras.Sequential([model, tf.keras.layers.Softmax()])
+    predictions = model.predict(X_test)
+    print("prediction: ", np.argmax(predictions[0]))
+    show_predictions(predictions, X_test, Y_test)
 
-    #prediction
-    predictions = probability_model.predict(test_images)
-    print("prediction 0: ", np.argmax(predictions[0]))
-    show_predictions(predictions, test_images, test_labels)
+    # print(model.get_weights())
+
+    # print(model.get_layer('quant_conv2d').get_weights())
+    # print(model.get_layer('max_pooling2d').get_weights())
+    # print(model.get_layer('quant_conv2d_1').get_weights())
+    # print(model.get_layer('max_pooling2d_1').get_weights())
+    # print(model.get_layer('quant_conv2d_2').get_weights())
+    # print(model.get_layer('flatten').get_weights())
+    # print(model.get_layer('quant_dense').get_weights())
+    # print(model.get_layer('quant_dense_1').get_weights())
+    # print(model.get_layer('activation').get_weights())
+
 
 main()
