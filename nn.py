@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
-import conv as layers
 import larq as lq
 
 from tensorflow.keras.datasets import mnist
@@ -86,15 +85,15 @@ def show_predictions(predictions, test_images, test_labels, history):
 
 def main():
 
-    @tf.function
-    def hard_sigmoid(x):
-        return tf.clip_by_value((x + 1.)/2., 0, 1)
-
-    def round_through(x):
-        return x + tf.stop_gradient(tf.round(x)-x)
-
-    def step_act(x):
-        return 2.*round_through(hard_sigmoid(x))-1.
+    # @tf.function
+    # def hard_sigmoid(x):
+    #     return tf.clip_by_value((x + 1.)/2., 0, 1)
+    #
+    # def round_through(x):
+    #     return x + tf.stop_gradient(tf.round(x)-x)
+    #
+    # def step_act(x):
+    #     return 2.*round_through(hard_sigmoid(x))-1.
 
     num_classes = 10
     input_shape = (28, 28, 1)
@@ -104,7 +103,7 @@ def main():
     X_test = X_test.reshape((10000, 28, 28, 1))
     X_train, X_test = X_train / 127.5 - 1, X_test / 127.5 - 1
 
-    kwargs = dict(input_quantizer=None,
+    kwargs = dict(input_quantizer="ste_sign",
               kernel_quantizer="ste_sign",
               kernel_constraint="weight_clip")
 
@@ -112,10 +111,10 @@ def main():
     model.add(lq.layers.QuantConv2D(32, (3, 3),use_bias=False,
                                 input_shape=input_shape, **kwargs))
     model.add(tf.keras.layers.MaxPooling2D((2, 2)))
-    model.add(tf.keras.layers.Activation(step_act))
+    # model.add(tf.keras.layers.Activation(step_act))
     model.add(lq.layers.QuantConv2D(64, (3, 3), use_bias=False, **kwargs))
     model.add(tf.keras.layers.MaxPooling2D((2, 2)))
-    model.add(tf.keras.layers.Activation(step_act))
+    # model.add(tf.keras.layers.Activation(step_act))
     model.add(tf.keras.layers.Flatten())
     # model.add(lq.layers.QuantDense(256, use_bias=False, **kwargs))
     # model.add(tf.keras.layers.BatchNormalization(scale=False))
