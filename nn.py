@@ -86,8 +86,15 @@ def show_predictions(predictions, test_images, test_labels, history):
 
 def main():
 
+    @tf.function
+    def hard_sigmoid(x):
+        return tf.clip_by_value((x + 1.)/2., 0, 1)
+
+    def round_through(x):
+        return x + tf.stop_gradient(tf.round(x)-x)
+
     def step_act(x):
-        return tf.clip_by_value(x, -1, 1)
+        return 2.*round_through(hard_sigmoid(x))-1.
 
     num_classes = 10
     input_shape = (28, 28, 1)
@@ -102,24 +109,17 @@ def main():
               kernel_constraint="weight_clip")
 
     model = tf.keras.Sequential()
-    model.add(lq.layers.QuantConv2D(32, (3, 3),
-                                kernel_quantizer="ste_sign",
-                                kernel_constraint="weight_clip",
-                                use_bias=False,
-                                input_shape=(28, 28, 1)))
+    model.add(lq.layers.QuantConv2D(32, (3, 3),use_bias=False,
+                                input_shape=input_shape, **kwargs))
     model.add(tf.keras.layers.MaxPooling2D((2, 2)))
-    # model.add(tf.keras.layers.BatchNormalization(scale=False))
     model.add(tf.keras.layers.Activation(step_act))
     model.add(lq.layers.QuantConv2D(64, (3, 3), use_bias=False, **kwargs))
     model.add(tf.keras.layers.MaxPooling2D((2, 2)))
-    # model.add(tf.keras.layers.BatchNormalization(scale=False))
     model.add(tf.keras.layers.Activation(step_act))
-    # model.add(tf.keras.layers.BatchNormalization(scale=False))
     model.add(tf.keras.layers.Flatten())
     # model.add(lq.layers.QuantDense(256, use_bias=False, **kwargs))
     # model.add(tf.keras.layers.BatchNormalization(scale=False))
     model.add(lq.layers.QuantDense(10, use_bias=False, **kwargs))
-    # model.add(tf.keras.layers.BatchNormalization(scale=False))
     model.add(tf.keras.layers.Activation("softmax"))
 
     optimizer = lq.optimizers.CaseOptimizer(
