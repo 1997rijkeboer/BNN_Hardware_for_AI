@@ -58,7 +58,7 @@ def plot_value_array(i, predictions_array, true_label):
     thisplot[true_label].set_color('blue')
 
 
-def show_predictions(predictions, test_images, test_labels, history):
+def show_results(predictions, test_images, test_labels, history):
 
     plt.figure(figsize=(10,10))
     for i in range(25):
@@ -82,18 +82,36 @@ def show_predictions(predictions, test_images, test_labels, history):
     plt.tight_layout()
     plt.savefig('accuracy.png')
 
+    plt.figure(0)
+    plt.plot(history.history['accuracy'])
+    # plt.plot(history.history['val_accuracy'])
+    plt.title('model accuracy')
+    plt.ylabel('accuracy')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'test'], loc='upper left')
+    plt.show()
+
+    print(np.max(history.history['accuracy']))
+    # print(np.max(history.history['val_accuracy']))
+
+    plt.figure(11)
+    plt.plot(history.history['loss'])
+    # plt.plot(history.history['val_loss'])
+    plt.title('model loss')
+    plt.ylabel('loss')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'test'], loc='upper left')
+
+    print(np.min(history.history['loss']))
+    # print(np.min(history.history['val_loss']))
+    plt.show()
+
+def export_weights(model):
+    weights = model.get_weights()
+    print(weights)
+    np.savetxt('nn_weights.txt', weights ,fmt='%s')
 
 def main():
-
-    # @tf.function
-    # def hard_sigmoid(x):
-    #     return tf.clip_by_value((x + 1.)/2., 0, 1)
-    #
-    # def round_through(x):
-    #     return x + tf.stop_gradient(tf.round(x)-x)
-    #
-    # def step_act(x):
-    #     return 2.*round_through(hard_sigmoid(x))-1.
 
     num_classes = 10
     input_shape = (28, 28, 1)
@@ -131,6 +149,8 @@ def main():
         metrics=['accuracy'])
 
     lq.models.summary(model)
+    model.save('bnn_model')
+    model.save_weights('bnn_weights.h5')
 
     history = model.fit(X_train, Y_train, epochs=2, shuffle=True, batch_size=32)
     test_loss, test_acc = model.evaluate(X_test, Y_test)
@@ -138,32 +158,8 @@ def main():
 
     predictions = model.predict(X_test)
     print("prediction: ", np.argmax(predictions[0]))
-    show_predictions(predictions, X_test, Y_test, history)
 
-    plt.figure(0)
-    plt.plot(history.history['accuracy'])
-    # plt.plot(history.history['val_accuracy'])
-    plt.title('model accuracy')
-    plt.ylabel('accuracy')
-    plt.xlabel('epoch')
-    plt.legend(['train', 'test'], loc='upper left')
-    plt.show()
-
-    print(np.max(history.history['accuracy']))
-    # print(np.max(history.history['val_accuracy']))
-
-    plt.figure(11)
-    plt.plot(history.history['loss'])
-    # plt.plot(history.history['val_loss'])
-    plt.title('model loss')
-    plt.ylabel('loss')
-    plt.xlabel('epoch')
-    plt.legend(['train', 'test'], loc='upper left')
-
-    print(np.min(history.history['loss']))
-    # print(np.min(history.history['val_loss']))
-    plt.show()
-
-    print(model.get_weights())
+    show_results(predictions, X_test, Y_test, history)
+    export_weights(model)
 
 main()
