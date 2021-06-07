@@ -59,7 +59,7 @@ def plot_value_array(i, predictions_array, true_label):
     thisplot[true_label].set_color('blue')
 
 
-def show_predictions(predictions, test_images, test_labels):
+def show_predictions(predictions, test_images, test_labels, history):
 
     plt.figure(figsize=(10,10))
     for i in range(25):
@@ -86,6 +86,9 @@ def show_predictions(predictions, test_images, test_labels):
 
 def main():
 
+    def step_act(x):
+        return tf.clip_by_value(x, -1, 1)
+
     num_classes = 10
     input_shape = (28, 28, 1)
 
@@ -94,7 +97,7 @@ def main():
     X_test = X_test.reshape((10000, 28, 28, 1))
     X_train, X_test = X_train / 127.5 - 1, X_test / 127.5 - 1
 
-    kwargs = dict(input_quantizer="ste_sign",
+    kwargs = dict(input_quantizer=None,
               kernel_quantizer="ste_sign",
               kernel_constraint="weight_clip")
 
@@ -105,23 +108,19 @@ def main():
                                 use_bias=False,
                                 input_shape=(28, 28, 1)))
     model.add(tf.keras.layers.MaxPooling2D((2, 2)))
-    model.add(tf.keras.layers.BatchNormalization(scale=False))
-
+    # model.add(tf.keras.layers.BatchNormalization(scale=False))
+    model.add(tf.keras.layers.Activation(step_act))
     model.add(lq.layers.QuantConv2D(64, (3, 3), use_bias=False, **kwargs))
     model.add(tf.keras.layers.MaxPooling2D((2, 2)))
-    model.add(tf.keras.layers.BatchNormalization(scale=False))
-    #
-    model.add(lq.layers.QuantConv2D(64, (3, 3), use_bias=False, **kwargs))
-    model.add(tf.keras.layers.BatchNormalization(scale=False))
+    # model.add(tf.keras.layers.BatchNormalization(scale=False))
+    model.add(tf.keras.layers.Activation(step_act))
+    # model.add(tf.keras.layers.BatchNormalization(scale=False))
     model.add(tf.keras.layers.Flatten())
-    #
-    model.add(lq.layers.QuantDense(64, use_bias=False, **kwargs))
-    model.add(tf.keras.layers.BatchNormalization(scale=False))
+    # model.add(lq.layers.QuantDense(256, use_bias=False, **kwargs))
+    # model.add(tf.keras.layers.BatchNormalization(scale=False))
     model.add(lq.layers.QuantDense(10, use_bias=False, **kwargs))
-    model.add(tf.keras.layers.BatchNormalization(scale=False))
+    # model.add(tf.keras.layers.BatchNormalization(scale=False))
     model.add(tf.keras.layers.Activation("softmax"))
-
-    lq.models.summary(model)
 
     optimizer = lq.optimizers.CaseOptimizer(
     (lq.optimizers.Bop.is_binary_variable, lq.optimizers.Bop()),
@@ -129,28 +128,43 @@ def main():
     )
 
     model.compile(optimizer=optimizer,
-                  loss='sparse_categorical_crossentropy',
-                  metrics=['accuracy'])
+        loss='sparse_categorical_crossentropy',
+        metrics=['accuracy'])
 
-    history = model.fit(X_train, Y_train, batch_size=64, epochs=1)
+    lq.models.summary(model)
+
+    history = model.fit(X_train, Y_train, epochs=2, shuffle=True, batch_size=32)
     test_loss, test_acc = model.evaluate(X_test, Y_test)
     print('\nAccuracy:', test_acc)
 
     predictions = model.predict(X_test)
     print("prediction: ", np.argmax(predictions[0]))
-    show_predictions(predictions, X_test, Y_test)
+    show_predictions(predictions, X_test, Y_test, history)
 
-    # print(model.get_weights())
+    plt.figure(0)
+    plt.plot(history.history['accuracy'])
+    # plt.plot(history.history['val_accuracy'])
+    plt.title('model accuracy')
+    plt.ylabel('accuracy')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'test'], loc='upper left')
+    plt.show()
 
-    # print(model.get_layer('quant_conv2d').get_weights())
-    # print(model.get_layer('max_pooling2d').get_weights())
-    # print(model.get_layer('quant_conv2d_1').get_weights())
-    # print(model.get_layer('max_pooling2d_1').get_weights())
-    # print(model.get_layer('quant_conv2d_2').get_weights())
-    # print(model.get_layer('flatten').get_weights())
-    # print(model.get_layer('quant_dense').get_weights())
-    # print(model.get_layer('quant_dense_1').get_weights())
-    # print(model.get_layer('activation').get_weights())
+    print(np.max(history.history['accuracy']))
+    # print(np.max(history.history['val_accuracy']))
 
+    plt.figure(11)
+    plt.plot(history.history['loss'])
+    # plt.plot(history.history['val_loss'])
+    plt.title('model loss')
+    plt.ylabel('loss')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'test'], loc='upper left')
+
+    print(np.min(history.history['loss']))
+    # print(np.min(history.history['val_loss']))
+    plt.show()
+
+    print(model.get_weights())
 
 main()
