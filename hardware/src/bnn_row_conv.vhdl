@@ -77,16 +77,18 @@ begin
     -- Convolution
     process (weights, ibuffer)
         variable mul : std_logic;
-        variable sum : unsigned(OUTPUT_WIDTH-1 downto 0);
+        variable sum : signed(OUTPUT_WIDTH-1 downto 0);
     begin
         for I in 0 to INPUT_COLS-KERNEL_COLS loop
             sum := (others => '0');
 
             for Y in 0 to KERNEL_ROWS-1 loop
                 for X in 0 to KERNEL_COLS-1 loop
-                    mul := weights(Y*KERNEL_COLS+X) and ibuffer(Y)(I+X); -- change to xnor
+                    mul := weights(Y*KERNEL_COLS+X) xnor ibuffer(Y)(I+X);
                     if mul = '1' then
                         sum := sum + 1;
+                    else
+                        sum := sum - 1;
                     end if;
                 end loop;
             end loop;

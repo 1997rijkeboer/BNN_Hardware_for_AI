@@ -36,7 +36,7 @@ architecture rtl of row_pool_sum is
 
     -- Sum/output registers
     constant OUTPUT_COLS : integer := INPUT_COLS/POOL_COLS;
-    type sumreg_t is array(0 to OUTPUT_COLS-1) of unsigned(OUTPUT_WIDTH-1 downto 0);
+    type sumreg_t is array(0 to OUTPUT_COLS-1) of signed(OUTPUT_WIDTH-1 downto 0);
     signal sumreg : sumreg_t;
     signal outreg : sumreg_t;
 
@@ -59,7 +59,7 @@ begin
 
     -- Input sum
     process (clk)
-        variable sum : unsigned(OUTPUT_WIDTH-1 downto 0);
+        variable sum : signed(OUTPUT_WIDTH-1 downto 0);
         variable index : integer;
     begin
         if rising_edge(clk) and ready = '1' then
@@ -68,7 +68,7 @@ begin
 
                 for X in 0 to POOL_COLS-1 loop
                     index := I*POOL_COLS + X;
-                    sum := sum + unsigned(row_in((index+1)*INPUT_WIDTH-1 downto index*INPUT_WIDTH));
+                    sum := sum + signed(row_in((index+1)*INPUT_WIDTH-1 downto index*INPUT_WIDTH));
                 end loop;
 
                 sumreg(I) <= sum;
@@ -79,7 +79,7 @@ begin
 
     -- Output sum
     process (clk)
-        variable sum : unsigned(OUTPUT_WIDTH-1 downto 0);
+        variable sum : signed(OUTPUT_WIDTH-1 downto 0);
     begin
         if rising_edge(clk) then
             --done <= '0';

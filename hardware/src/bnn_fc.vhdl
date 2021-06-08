@@ -43,8 +43,8 @@ architecture rtl of bnn_fc is
     signal weights : std_logic_vector(0 to NUM_WEIGHTS-1); -- := (others => '0');
 
     -- Sum/output
-    signal sumreg : unsigned(OUTPUT_WIDTH-1 downto 0);
-    signal outreg : unsigned(OUTPUT_WIDTH-1 downto 0);
+    signal sumreg : signed(OUTPUT_WIDTH-1 downto 0);
+    signal outreg : signed(OUTPUT_WIDTH-1 downto 0);
 
     signal row : integer range 0 to INPUT_ROWS-1;
 
@@ -80,7 +80,7 @@ begin
     -- Input sum
     process (clk)
         variable mul : std_logic;
-        variable sum : unsigned(OUTPUT_WIDTH-1 downto 0);
+        variable sum : signed(OUTPUT_WIDTH-1 downto 0);
     begin
         if rising_edge(clk) and ready = '1' then
             sum := (others => '0');
@@ -89,6 +89,8 @@ begin
                 mul := WEIGHTS(row*INPUT_COLS + I) xnor row_in(I);
                 if mul = '1' then
                     sum := sum + 1;
+                else
+                    sum := sum - 1;
                 end if;
             end loop;
 
@@ -100,7 +102,7 @@ begin
     -- Output sum
 MULTI_ROW: if INPUT_ROWS /= 1 generate
     process (clk)
-        variable sum : unsigned(OUTPUT_WIDTH-1 downto 0);
+        variable sum : signed(OUTPUT_WIDTH-1 downto 0);
     begin
         if rising_edge(clk) then
             --done <= '0';
