@@ -68,7 +68,7 @@ conv_inst: entity work.bnn_row_conv
         done        => done_conv
     );
 
-pool_inst: entity work.row_pool_sum
+pool_inst: entity work.row_pool_max
     generic map (
         INPUT_WIDTH => CONV_WIDTH,
         OUTPUT_WIDTH => POOL_WIDTH,

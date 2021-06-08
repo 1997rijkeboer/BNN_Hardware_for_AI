@@ -1,11 +1,11 @@
--- Row-parallel sum pooling block
+-- Row-parallel max pooling block
 
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
 
-entity row_pool_sum is
+entity row_pool_max is
     generic (
         INPUT_WIDTH : integer;
         OUTPUT_WIDTH : integer;
@@ -29,16 +29,18 @@ entity row_pool_sum is
 end entity;
 
 
-architecture rtl of row_pool_sum is
+architecture rtl of row_pool_max is
+
+    constant MAX_NEG : signed(OUTPUT_WIDTH-1 downto 0) := (OUTPUT_WIDTH-1 => '1', others => '0');
 
     -- Delayed ready
     signal ready1 : std_logic;
 
-    -- Sum/output registers
+    -- Max/output registers
     constant OUTPUT_COLS : integer := INPUT_COLS/POOL_COLS;
-    type sumreg_t is array(0 to OUTPUT_COLS-1) of signed(OUTPUT_WIDTH-1 downto 0);
-    signal sumreg : sumreg_t;
-    signal outreg : sumreg_t;
+    type maxreg_t is array(0 to OUTPUT_COLS-1) of signed(OUTPUT_WIDTH-1 downto 0);
+    signal maxreg : maxreg_t;
+    signal outreg : maxreg_t;
 
     signal row : integer range 0 to POOL_ROWS-1;
 
@@ -57,36 +59,40 @@ begin
     end process;
 
 
-    -- Input sum
+    -- Input max
     process (clk)
-        variable sum : signed(OUTPUT_WIDTH-1 downto 0);
+        variable max : signed(OUTPUT_WIDTH-1 downto 0);
+        variable inp : signed(INPUT_WIDTH-1 downto 0);
         variable index : integer;
     begin
         if rising_edge(clk) and ready = '1' then
             for I in 0 to OUTPUT_COLS-1 loop
-                sum := (others => '0');
+                max := MAX_NEG;
 
                 for X in 0 to POOL_COLS-1 loop
                     index := I*POOL_COLS + X;
-                    sum := sum + signed(row_in((index+1)*INPUT_WIDTH-1 downto index*INPUT_WIDTH));
+                    inp := signed(row_in((index+1)*INPUT_WIDTH-1 downto index*INPUT_WIDTH));
+                    if inp > max then
+                        max := inp;
+                    end if;
                 end loop;
 
-                sumreg(I) <= sum;
+                maxreg(I) <= max;
             end loop;
         end if;
     end process;
 
 
-    -- Output sum
+    -- Output max
     process (clk)
-        variable sum : signed(OUTPUT_WIDTH-1 downto 0);
+        variable max : signed(OUTPUT_WIDTH-1 downto 0);
     begin
         if rising_edge(clk) then
             done <= '0';
             if reset = '1' then
                 row <= 0;
                 done <= '0';
-                outreg <= (others => (others => '0'));
+                outreg <= (others => MAX_NEG);
             elsif ready1 = '1' then
                 if row = POOL_ROWS-1 then
                     row <= 0;
@@ -97,10 +103,12 @@ begin
                 end if;
 
                 if row = 0 then
-                    outreg <= sumreg;
+                    outreg <= maxreg;
                 else
                     for I in 0 to OUTPUT_COLS-1 loop
-                        outreg(I) <= outreg(I) + sumreg(I);
+                        if maxreg(I) > outreg(I) then
+                            outreg(I) <= maxreg(I);
+                        end if;
                     end loop;
                 end if;
             end if;
