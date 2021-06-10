@@ -1,3 +1,8 @@
+# TODO
+* argmax layer
+* activation with threshold + layer
+* organization of multiple convolution layers
+
 (1, 28, 1)
 5x 3x3 conv
 (5, 26, 4)
@@ -19,6 +24,7 @@ fc (60x1)
 
 (layer num) = gen_fc_layer(layer num, ...)
 
+gen_output(layer num)
 
 row_out2
 
@@ -32,3 +38,15 @@ entity
 architecture
 
 --##SIGNALS
+
+
+signal row_0 : std_logic_vector(INPUT_COLS*INPUT_WIDTH-1 downto 0);
+$ROW_SIG$
+
+signal row_0 : std_logic_vector(INPUT_COLS*INPUT_WIDTH-1 downto 0);
+signal row_1 : std_logic_vector(WIDTH-1 downto 0);
+$ROW_SIG$
+
+signal row_0 : std_logic_vector(INPUT_COLS*INPUT_WIDTH-1 downto 0);
+signal row_1 : std_logic_vector(WIDTH-1 downto 0);
+(row_1 to output of top level)
