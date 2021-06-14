@@ -70,11 +70,11 @@ clk   <= not clk after CLK_PERIOD/2;
         wait for CLK_PERIOD;
         ready   <= '1';
         row_in <= INPUTD(0 to COUNT*INPUT_WIDTH-1);
-        wait for CLK_PERIOD;
+        wait for 2*CLK_PERIOD;
 
-        --assert count = 1
-        --    report integer'image(count) & " bits changed, should have been 1"
-        --    severity failure;
+        assert row_out = "101"
+            report "WRONG OUTPUT INDEX"
+            severity failure;
         wait;
     end process;
 
