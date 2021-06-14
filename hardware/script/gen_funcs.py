@@ -311,6 +311,55 @@ def gen_fc_layer(str, layer_num, count, output_width, input_cols, input_rows):
     return (str, layer_num+1)
 
 ###############################################################################
+def gen_arg_max_layer(str, layer_num, count, input_width, output_width):
+    row_in_width  = count*input_width
+    row_out_width = output_width
+
+    inst_temp = Template("""layer_${I}_arg_max_inst: entity work.arg_max_layer
+    generic map (
+        COUNT       => $count,
+        INPUT_WIDTH => $input_width,
+        OUTPUT_WIDTH => $output_width
+    )
+    port map (
+        clk         => clk,
+        reset       => reset,
+
+        w_en        => w_en,
+        w_in        => w_pass($I),
+        w_out       => w_pass($Inext),
+
+        row_in      => row_$I,
+        ready       => rd_pass($I),
+
+        row_out     => row_$Inext,
+        done        => rd_pass($Inext)
+    );
+
+    $inst_gen""")
+
+    inst = inst_temp.safe_substitute(
+        I           = layer_num,
+        Inext       = layer_num + 1,
+        count       = count,
+        input_width = input_width,
+        output_width = output_width
+    )
+
+    sig_temp = Template("""signal row_$Inext : std_logic_vector($row_out_width-1 downto 0);
+    $sig_gen""")
+
+    sig = sig_temp.safe_substitute(
+        Inext         = layer_num + 1,
+        row_out_width = row_out_width
+    )
+
+    str = Template(str).safe_substitute(sig_gen=sig, inst_gen=inst)
+
+    return (str, layer_num+1)
+
+###############################################################################
+
 def gen_output(str, layer_num):
     str = Template(str).safe_substitute(
         num_layers  = layer_num,

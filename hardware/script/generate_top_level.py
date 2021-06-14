@@ -13,7 +13,7 @@ layer_num = 0
 (str, layer_num) = gen_pool_max_layer(str, layer_num, 10, 5, 5, 26, 2, 2)
 (str, layer_num) = gen_act_layer(str, layer_num, 10, 5, 13)
 (str, layer_num) = gen_fc_layer(str, layer_num, 10, 9, 130, 13)
-(str, layer_num) = gen_act_layer(str, layer_num, 10, 9, 1)
+(str, layer_num) = gen_arg_max_layer(str, layer_num, 10, 9, 4) #count, inputwidth, outputwidth = 4 bits as count = 10
 
 str = gen_output(str, layer_num)
 
