@@ -13,8 +13,9 @@ architecture sim of arg_max_layer_tb is
     constant COUNT          : integer := 8;
 
     --type inputd_t is std_logic_vector(COUNT*INPUT_WIDTH-1 downto 0);
-    constant INPUTD         : std_logic_vector(0 to COUNT*INPUT_WIDTH-1) := "01000111001011010100011111101001";
-
+    --constant INPUTD         : std_logic_vector(0 to COUNT*INPUT_WIDTH-1) := "01000111001011010100011111101001";
+    --constant INPUTD         : std_logic_vector(0 to COUNT*INPUT_WIDTH-1) := "10001001101010111100110111111110"; --index should be 1
+    constant INPUTD         : std_logic_vector(0 to COUNT*INPUT_WIDTH-1) := "00001001001010111100110111111110"; --index should be 5
  --"0000 1111 0010 1101 0100 0111 0001 1001"
 
     signal clk      : std_logic := '0';
