@@ -8,10 +8,10 @@ use IEEE.numeric_std.all;
 entity top is
     generic (
         INPUT_WIDTH     : integer := 8;
-        OUTPUT_WIDTH    : integer := 1;
+        OUTPUT_WIDTH    : integer := 4;
         INPUT_COLS      : integer := 28;
         INPUT_ROWS      : integer := 28;
-        OUTPUT_COLS     : integer := 10
+        OUTPUT_COLS     : integer := 1
     );
     port(
         -- System

@@ -6,13 +6,13 @@ vhdl work ../src/row_activation.vhdl
 vhdl work ../src/row_activation_uthreshold.vhdl
 vhdl work ../src/bnn_row_conv_layer.vhdl
 vhdl work ../src/row_activation_layer.vhdl
-vhdl work ../src/bnn_argmax_layer.vhdl
-vhdl work ../src/bnn_argmax_layer_tb.vhdl
 vhdl work ../src/top.vhdl
 vhdl work ../src/row_pool_sum_layer.vhdl
 vhdl work ../src/conv_pool_tb.vhdl
 vhdl work ../src/bnn_fc_layer.vhdl
+vhdl work ../src/bnn_arg_max_layer.vhdl
 vhdl work ../src/row_pool_sum.vhdl
 vhdl work ../src/row_pool_max_layer.vhdl
+vhdl work ../src/bnn_arg_max_layer_tb.vhdl
 vhdl work ../src/row_activation_uthreshold_layer.vhdl
 
