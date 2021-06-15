@@ -5,111 +5,60 @@ import larq as lq
 
 from tensorflow.keras.datasets import mnist
 
-def show_data(train_images, train_labels, test_images, test_labels):
-
-    print('MNIST Dataset Shape:')
-    print('X_train: ' + str(train_images.shape))
-    print('Y_train: ' + str(train_labels.shape))
-    print('X_test:  '  + str(test_images.shape))
-    print('Y_test:  '  + str(test_labels.shape))
-
-    class_names = ['0', '1', '2', '3', '4',
-                   '5', '6', '7', '8', '9']
-    plt.figure(figsize=(10,10))
-    for i in range(25):
-        plt.subplot(5,5,i+1)
-        plt.xticks([])
-        plt.yticks([])
-        plt.grid(False)
-        plt.imshow(train_images[i], cmap=plt.cm.binary)
-        plt.xlabel(class_names[train_labels[i]])
-    plt.savefig('train_data.png')
-
-
-def plot_image(i, predictions_array, true_label, img):
-    class_names = ['0', '1', '2', '3', '4','5', '6', '7', '8', '9']
-    true_label, img = true_label[i], img[i]
-    plt.grid(False)
-    plt.xticks([])
-    plt.yticks([])
-    plt.imshow(img, cmap=plt.cm.binary)
-
-    predicted_label = np.argmax(predictions_array)
-    if predicted_label == true_label:
-        color = 'blue'
-    else:
-        color = 'red'
-
-    plt.xlabel("{} {:2.0f}% ({})".format(class_names[predicted_label],
-                                100*np.max(predictions_array),
-                                class_names[true_label]),
-                                color=color)
-
-def plot_value_array(i, predictions_array, true_label):
-    true_label = true_label[i]
-    plt.grid(False)
-    plt.xticks(range(10))
-    plt.yticks([])
-    thisplot = plt.bar(range(10), predictions_array, color="#777777")
-    plt.ylim([0, 1])
-    predicted_label = np.argmax(predictions_array)
-
-    thisplot[predicted_label].set_color('red')
-    thisplot[true_label].set_color('blue')
-
-
-def show_results(predictions, test_images, test_labels, history):
-
-    plt.figure(figsize=(10,10))
-    for i in range(25):
-        plt.subplot(5,5,i+1)
-        plt.xticks([])
-        plt.yticks([])
-        plt.grid(False)
-        plt.imshow(test_images[i], cmap=plt.cm.binary)
-        plt.xlabel(np.argmax(predictions[i]))
-    plt.savefig('test_data.png')
-
-    num_rows = 5
-    num_cols = 3
-    num_images = num_rows*num_cols
-    plt.figure(figsize=(2*2*num_cols, 2*num_rows))
-    for i in range(num_images):
-      plt.subplot(num_rows, 2*num_cols, 2*i+1)
-      plot_image(i, predictions[i], test_labels, test_images)
-      plt.subplot(num_rows, 2*num_cols, 2*i+2)
-      plot_value_array(i, predictions[i], test_labels)
-    plt.tight_layout()
-    plt.savefig('accuracy.png')
+def save_results(accuracy, loss):
 
     plt.figure(0)
-    plt.plot(history.history['accuracy'])
+    plt.plot(accuracy)
     # plt.plot(history.history['val_accuracy'])
     plt.title('model accuracy')
     plt.ylabel('accuracy')
     plt.xlabel('epoch')
     plt.legend(['train', 'test'], loc='upper left')
-    plt.show()
+    plt.savefig('accuracy.png')
 
-    print(np.max(history.history['accuracy']))
-    # print(np.max(history.history['val_accuracy']))
-
-    plt.figure(11)
-    plt.plot(history.history['loss'])
+    plt.figure(1)
+    plt.plot(loss)
     # plt.plot(history.history['val_loss'])
     plt.title('model loss')
     plt.ylabel('loss')
     plt.xlabel('epoch')
     plt.legend(['train', 'test'], loc='upper left')
+    plt.savefig('loss.png')
 
-    print(np.min(history.history['loss']))
-    # print(np.min(history.history['val_loss']))
-    plt.show()
-
-def export_weights(model):
-    weights = model.get_weights()
-    print(weights)
-    np.savetxt('nn_weights.txt', weights ,fmt='%s')
+def save_weights(model):
+    f = open("bnn_weights.txt", "w")
+    for layer in model.layers:
+        name = layer.get_config()['name']
+        weights = np.array(layer.get_weights())
+        # print(weights.size,weights.shape)
+        if "conv" in name:
+            input_size = weights.shape[3]
+            num_filters = weights.shape[4]
+            window = weights.shape[1]
+            f.write(name+" ("+str(window)+","+str(window)+","
+                +str(input_size)+","+str(num_filters)+") :\n")
+            for i in range(0,window):
+                for j in range(0,window):
+                    for k in range(0,input_size):
+                        f.write("index ("+str(i)+","+str(j)+") for channel "+str(k+1)+": ")
+                        for n in range(0,num_filters):
+                            x = weights[0][i][j][k][n]
+                            x = int((x+1)/2)
+                            f.write(str(x))
+                        f.write("\n")
+        elif "dense" in name:
+            output_size = weights.shape[2]
+            input_size = weights.shape[1]
+            f.write(name+" ("+str(input_size)+","+str(output_size)+") :\n")
+            for i in range(0,input_size):
+                f.write("index "+str(i)+": ")
+                for k in range(0,output_size):
+                    x = weights[0][i][k]
+                    x = int((x+1)/2)
+                    f.write(str(x))
+                f.write("\n")
+        # print(weights)
+    f.close()
 
 def main():
 
@@ -149,17 +98,16 @@ def main():
         metrics=['accuracy'])
 
     lq.models.summary(model)
-    model.save('bnn_model')
-    model.save_weights('bnn_weights.h5')
 
-    history = model.fit(X_train, Y_train, epochs=2, shuffle=True, batch_size=32)
+    history = model.fit(X_train, Y_train, epochs=2, shuffle=True, batch_size=1024)
+
     test_loss, test_acc = model.evaluate(X_test, Y_test)
-    print('\nAccuracy:', test_acc)
-
     predictions = model.predict(X_test)
-    print("prediction: ", np.argmax(predictions[0]))
 
-    show_results(predictions, X_test, Y_test, history)
-    export_weights(model)
+    print('\nAccuracy:', test_acc)
+    print("prediction: ", np.argmax(predictions[0]))
+    save_results(history.history['accuracy'], history.history['loss'])
+    save_weights(model)
+
 
 main()
