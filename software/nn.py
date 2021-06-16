@@ -26,7 +26,7 @@ def save_results(accuracy, loss):
     plt.savefig('loss.png')
 
 def save_weights(model):
-    f = open("bnn_weights.txt", "w")
+    f = open("../hardware/bnn_weights.txt", "w")
     for layer in model.layers:
         name = layer.get_config()['name']
         weights = np.array(layer.get_weights())
@@ -35,12 +35,13 @@ def save_weights(model):
             input_size = weights.shape[3]
             num_filters = weights.shape[4]
             window = weights.shape[1]
-            f.write(name+" ("+str(window)+","+str(window)+","
-                +str(input_size)+","+str(num_filters)+") :\n")
+            f.write(str(window)+","+str(input_size)+","+str(num_filters)+"\n")
+            # f.write(name+" ("+str(window)+","+str(window)+","
+                # +str(input_size)+","+str(num_filters)+") :\n")
             for i in range(0,window):
                 for j in range(0,window):
                     for k in range(0,input_size):
-                        f.write("index ("+str(i)+","+str(j)+") for channel "+str(k+1)+": ")
+                        # f.write("index ("+str(i)+","+str(j)+") for channel "+str(k+1)+": ")
                         for n in range(0,num_filters):
                             x = weights[0][i][j][k][n]
                             x = int((x+1)/2)
@@ -49,9 +50,10 @@ def save_weights(model):
         elif "dense" in name:
             output_size = weights.shape[2]
             input_size = weights.shape[1]
-            f.write(name+" ("+str(input_size)+","+str(output_size)+") :\n")
+            f.write(str(input_size)+","+str(output_size)+"\n")
+            # f.write(name+" ("+str(input_size)+","+str(output_size)+") :\n")
             for i in range(0,input_size):
-                f.write("index "+str(i)+": ")
+                # f.write("index "+str(i)+": ")
                 for k in range(0,output_size):
                     x = weights[0][i][k]
                     x = int((x+1)/2)
@@ -99,7 +101,7 @@ def main():
 
     lq.models.summary(model)
 
-    history = model.fit(X_train, Y_train, epochs=2, shuffle=True, batch_size=1024)
+    history = model.fit(X_train, Y_train, epochs=2, shuffle=True, batch_size=64)
 
     test_loss, test_acc = model.evaluate(X_test, Y_test)
     predictions = model.predict(X_test)
