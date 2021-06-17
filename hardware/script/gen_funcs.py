@@ -3,13 +3,14 @@ from string import Template
 
 
 ###############################################################################
-def gen_conv_layer(str, layer_num, count, output_width, input_cols, kernel_cols, kernel_rows):
-    row_in_width  = input_cols
-    row_out_width = count*(input_cols-kernel_cols+1)*output_width
+def gen_conv_layer(str, layer_num, count_in, count_out, output_width, input_cols, kernel_cols, kernel_rows):
+    row_in_width  = count_in*input_cols
+    row_out_width = count_in*count_out*(input_cols-kernel_cols+1)*output_width
 
     inst_temp = Template("""layer_${I}_conv_inst: entity work.bnn_row_conv_layer
     generic map (
-        COUNT       => $count,
+        COUNT_IN    => $count_in,
+        COUNT_OUT   => $count_out,
         OUTPUT_WIDTH => $output_width,
         INPUT_COLS  => $input_cols,
         KERNEL_COLS => $kernel_cols,
@@ -35,7 +36,8 @@ def gen_conv_layer(str, layer_num, count, output_width, input_cols, kernel_cols,
     inst = inst_temp.safe_substitute(
         I           = layer_num,
         Inext       = layer_num + 1,
-        count       = count,
+        count_in    = count_in,
+        count_out   = count_out,
         output_width = output_width,
         input_cols  = input_cols,
         kernel_cols = kernel_cols,

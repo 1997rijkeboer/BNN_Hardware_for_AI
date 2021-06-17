@@ -1,7 +1,7 @@
 #!/usr/bin/tclsh
 # Set simulation inputs from test file
 
-log_wave [get_objects]
+log_wave [get_objects -r]
 
 
 set NUM_ROWS 28
