@@ -32,33 +32,34 @@ def save_weights(model):
         weights = np.array(layer.get_weights())
         # print(weights.size,weights.shape)
         if "conv" in name:
-            input_size = weights.shape[3]
+            channels = weights.shape[3]
             num_filters = weights.shape[4]
             window = weights.shape[1]
-            f.write(str(window)+","+str(input_size)+","+str(num_filters)+"\n")
-            # f.write(name+" ("+str(window)+","+str(window)+","
-                # +str(input_size)+","+str(num_filters)+") :\n")
-            for i in range(0,window):
-                for j in range(0,window):
-                    for k in range(0,input_size):
-                        # f.write("index ("+str(i)+","+str(j)+") for channel "+str(k+1)+": ")
-                        for n in range(0,num_filters):
+            f.write(str(window)+","+str(window)+","+str(channels)+","+str(num_filters)+"\n")
+            space = channels*num_filters
+
+            for n in range(0,num_filters):
+                for k in range(0,channels):
+                    for i in range(0,window):
+                        for j in range(0,window):
                             x = weights[0][i][j][k][n]
                             x = int((x+1)/2)
                             f.write(str(x))
-                        f.write("\n")
+                        # f.write("\n")
+                    # f.write("\n")
+
         elif "dense" in name:
             output_size = weights.shape[2]
             input_size = weights.shape[1]
             f.write(str(input_size)+","+str(output_size)+"\n")
             # f.write(name+" ("+str(input_size)+","+str(output_size)+") :\n")
-            for i in range(0,input_size):
+            for k in range(0,output_size):
                 # f.write("index "+str(i)+": ")
-                for k in range(0,output_size):
+                for i in range(0,input_size):
                     x = weights[0][i][k]
                     x = int((x+1)/2)
                     f.write(str(x))
-                f.write("\n")
+                # f.write("\n")
         # print(weights)
     f.close()
 
