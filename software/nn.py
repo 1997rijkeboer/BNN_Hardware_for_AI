@@ -35,9 +35,7 @@ def save_weights(model):
             channels = weights.shape[3]
             num_filters = weights.shape[4]
             window = weights.shape[1]
-            f.write(str(window)+","+str(window)+","+str(channels)+","+str(num_filters)+"\n")
-            space = channels*num_filters
-
+            # f.write(str(window)+","+str(window)+","+str(channels)+","+str(num_filters)+"\n")
             for n in range(0,num_filters):
                 for k in range(0,channels):
                     for i in range(0,window):
@@ -51,8 +49,7 @@ def save_weights(model):
         elif "dense" in name:
             output_size = weights.shape[2]
             input_size = weights.shape[1]
-            f.write(str(input_size)+","+str(output_size)+"\n")
-            # f.write(name+" ("+str(input_size)+","+str(output_size)+") :\n")
+            # f.write(str(input_size)+","+str(output_size)+"\n")
             for k in range(0,output_size):
                 # f.write("index "+str(i)+": ")
                 for i in range(0,input_size):
