@@ -1,0 +1,9 @@
+testdata.txt
+.hbs
+.Xil
+xsim.dir
+*.jou
+*.log
+*.pb
+*.wcfg
+*.wdb
