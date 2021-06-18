@@ -78,12 +78,9 @@ def main():
     model.add(lq.layers.QuantConv2D(42, (3, 3),use_bias=False,
                                 input_shape=input_shape, **kwargs))
     model.add(tf.keras.layers.MaxPooling2D((2, 2)))
-    # model.add(tf.keras.layers.Activation(step_act))
     model.add(lq.layers.QuantConv2D(78, (3, 3), use_bias=False, **kwargs))
     model.add(tf.keras.layers.MaxPooling2D((2, 2)))
-    # model.add(tf.keras.layers.Activation(step_act))
     model.add(tf.keras.layers.Flatten())
-    # model.add(lq.layers.QuantDense(256, use_bias=False, **kwargs))
     # model.add(tf.keras.layers.BatchNormalization(scale=False))
     model.add(lq.layers.QuantDense(10, use_bias=False, **kwargs))
     model.add(tf.keras.layers.Activation("softmax"))
@@ -100,7 +97,6 @@ def main():
     lq.models.summary(model)
 
     history = model.fit(X_train, Y_train, epochs=2, shuffle=True, batch_size=64)
-
     test_loss, test_acc = model.evaluate(X_test, Y_test)
     predictions = model.predict(X_test)
 
@@ -108,6 +104,5 @@ def main():
     print("prediction: ", np.argmax(predictions[0]))
     save_results(history.history['accuracy'], history.history['loss'])
     save_weights(model)
-
 
 main()
