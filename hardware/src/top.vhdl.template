@@ -1,0 +1,58 @@
+-- Top-level entity for neural networks
+-- With row-parallel inputs
+
+library IEEE;
+use IEEE.std_logic_1164.all;
+use IEEE.numeric_std.all;
+
+entity top is
+    generic (
+        INPUT_WIDTH     : integer := 8;
+        OUTPUT_WIDTH    : integer := 4;
+        INPUT_COLS      : integer := 28;
+        INPUT_ROWS      : integer := 28;
+        OUTPUT_COLS     : integer := 1
+    );
+    port(
+        -- System
+        clk         : in  std_logic;
+        reset       : in  std_logic;
+
+        -- Weight configuration
+        w_en        : in  std_logic; -- enable shifting
+        w_in        : in  std_logic; -- input
+        w_out       : out std_logic; -- output/passthrough
+
+        -- Input data
+        row_in      : in  std_logic_vector(INPUT_COLS*INPUT_WIDTH-1 downto 0);
+        ready       : in  std_logic;
+
+        -- Output data
+        row_out     : out std_logic_vector(OUTPUT_COLS*OUTPUT_WIDTH-1 downto 0);
+        done        : out std_logic
+    );
+
+end entity;
+
+
+architecture struct of top is
+
+    constant NUM_LAYERS : integer := $num_layers;
+    signal w_pass : std_logic_vector(0 to NUM_LAYERS);
+    signal rd_pass : std_logic_vector(0 to NUM_LAYERS);
+
+    signal row_0 : std_logic_vector(INPUT_COLS*INPUT_WIDTH-1 downto 0);
+    $sig_gen
+begin
+
+    w_pass(0) <= w_in;
+    w_out <= w_pass(NUM_LAYERS);
+
+    rd_pass(0) <= ready;
+    done <= rd_pass(NUM_LAYERS);
+
+    row_0 <= row_in;
+    row_out <= row_$num_layers;
+
+    $inst_gen
+end architecture;

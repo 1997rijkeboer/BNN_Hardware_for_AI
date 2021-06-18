@@ -1,18 +1,16 @@
--- Row-parallel max pooling layer
+-- Row-parallel activation/quantization with threshold layer
 
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
 
-entity row_pool_max_layer is
+entity row_activation_uthreshold_layer is
     generic (
         COUNT       : integer;
         INPUT_WIDTH : integer;
-        OUTPUT_WIDTH : integer;
         INPUT_COLS  : integer;
-        POOL_COLS   : integer;
-        POOL_ROWS   : integer
+        THRESHOLD   : integer
     );
     port (
         -- System
@@ -29,29 +27,27 @@ entity row_pool_max_layer is
         ready       : in  std_logic;
 
         -- Output data
-        row_out     : out std_logic_vector(COUNT*(INPUT_COLS/POOL_COLS)*OUTPUT_WIDTH-1 downto 0);
+        row_out     : out std_logic_vector(COUNT*INPUT_COLS-1 downto 0);
         done        : out std_logic
     );
 end entity;
 
 
-architecture struct of row_pool_max_layer is
+architecture struct of row_activation_uthreshold_layer is
 
     constant ROW_IN_WIDTH  : integer := INPUT_COLS*INPUT_WIDTH;
-    constant ROW_OUT_WIDTH : integer := (INPUT_COLS/POOL_COLS)*OUTPUT_WIDTH;
+    constant ROW_OUT_WIDTH : integer := INPUT_COLS;
 
     signal done_s : std_logic_vector(0 to COUNT-1);
 
 begin
 
-row_pool_max_gen: for I in 0 to COUNT-1 generate
-    row_pool_max_inst: entity work.row_pool_max
+row_activation_uthreshold_gen: for I in 0 to COUNT-1 generate
+    row_activation_uthreshold_inst: entity work.row_activation_uthreshold
         generic map (
             INPUT_WIDTH => INPUT_WIDTH,
-            OUTPUT_WIDTH => OUTPUT_WIDTH,
             INPUT_COLS  => INPUT_COLS,
-            POOL_COLS   => POOL_COLS,
-            POOL_ROWS   => POOL_ROWS
+            THRESHOLD   => THRESHOLD
         )
         port map (
             clk         => clk,
