@@ -20,7 +20,7 @@ entity bnn_row_conv_layer is
         reset       : in  std_logic;
 
         -- Weight configuration
-        weights     : in  std_logic_vector(0 to COUNT_OUT*KERNEL_COLS*KERNEL_ROWS-1);
+        weights     : in  std_logic_vector(0 to COUNT_IN*COUNT_OUT*KERNEL_COLS*KERNEL_ROWS-1);
 
         -- Input data
         row_in      : in  std_logic_vector(COUNT_IN*INPUT_COLS-1 downto 0);
@@ -55,7 +55,7 @@ bnn_row_conv_gen_gen: for IO in 0 to COUNT_OUT-1 generate
                 clk         => clk,
                 reset       => reset,
 
-                weights     => weights(IO*NUM_WEIGHTS to (IO+1)*NUM_WEIGHTS-1),
+                weights     => weights((IO*COUNT_IN+II)*NUM_WEIGHTS to (IO*COUNT_IN+II+1)*NUM_WEIGHTS-1),
 
                 row_in      => row_in((II+1)*INPUT_COLS-1 downto II*INPUT_COLS),
                 ready       => ready,

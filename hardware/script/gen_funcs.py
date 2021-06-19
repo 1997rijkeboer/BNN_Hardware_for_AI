@@ -8,7 +8,7 @@ def gen_conv_layer(state, count_in, count_out, output_width, input_cols, kernel_
     row_in_width  = count_in*input_cols
     row_out_width = count_in*count_out*(input_cols-kernel_cols+1)*output_width
 
-    weights = state[2].read(count_out*kernel_cols*kernel_rows)
+    weights = state[2].read(count_in*count_out*kernel_cols*kernel_rows)
 
     inst_temp = Template("""layer_${I}_conv_inst: entity work.bnn_row_conv_layer
     generic map (
