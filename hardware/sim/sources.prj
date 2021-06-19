@@ -1,5 +1,6 @@
 vhdl work ../src/bnn_row_conv_tb.vhdl
 vhdl work ../src/row_pool_max.vhdl
+vhdl work ../src/top_tb.vhdl
 vhdl work ../src/bnn_row_conv.vhdl
 vhdl work ../src/bnn_fc.vhdl
 vhdl work ../src/row_activation.vhdl

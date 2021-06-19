@@ -1,7 +1,7 @@
 #!/usr/bin/tclsh
 # Set simulation inputs from test file
 
-log_wave [get_objects -r]
+log_wave [get_objects /top_tb/top_inst/row_in /top_tb/top_inst/ready /top_tb/top_inst/row_out /top_tb/top_inst/done /top_tb/top_inst/w_pass /top_tb/top_inst/rd_pass]
 
 
 set NUM_ROWS 28
@@ -9,27 +9,41 @@ set period 10
 set halfperiod [expr $period/2]
 
 # Clock & reset
-add_force clk {0} {1 5} -repeat_every 10
+#add_force clk {0} {1 5} -repeat_every 10
 set_value -radix bin reset 1
 run $period
 set_value -radix bin reset 0
 run $period
 
 # Load in weights
-set fp [open "weightdata.txt" r]
+#set fp [open "../bnn_weights.txt" r]
+#set i 0
 
-foreach w [lreverse [split [read $fp] ""]] {
-    if {$w == 0 || $w == 1} {
-        #puts $w
-        set_value -radix bin w_in $w
-        set_value -radix bin w_en 1
-        run $period
-    }
+#set_value -radix bin w_en 1
+#foreach w [lreverse [split [read $fp] ""]] {
+#    if {$w == 0 || $w == 1} {
+#        #puts $w
+#        set_value -radix bin w_in $w
+#        run $period
+#
+#        incr i
+#        if {[expr $i%100] == 0} {
+#            puts $i
+#            if {$i >= 200} {
+#                break
+#            }
+#        }
+#    }
+#}
+#set_value -radix bin w_en 0
+#run $period
+#
+#close $fp
+# 494 * 100 > 49362
+for {set i 0} {$i < 494} {incr i} {
+    puts $i
+    run [expr $period * 100]
 }
-set_value -radix bin w_en 0
-run $period
-
-close $fp
 
 
 # Perform tests

@@ -1,5 +1,5 @@
 
-TOP=top
+TOP=top_tb
 SIM=sim
 PRJ=sources.prj
 SRC=$(filter-out vhdl work,$(shell cat $(PRJ)))
@@ -17,14 +17,14 @@ help:
 
 .PHONY: view
 view:
-	xsim -t wave.tcl $(SIM).wdb -gui
+	xsim --t wave.tcl $(SIM).wdb -gui
 
 .PHONY: sim
 sim: $(SIM).wdb
 
 .PHONY: isim
 isim:
-	xsim --view sim.wcfg $(SIM) --gui
+	xsim --t wave.tcl $(SIM) --gui
 
 
 $(SIM).wdb: sim.tcl xelab.pb
