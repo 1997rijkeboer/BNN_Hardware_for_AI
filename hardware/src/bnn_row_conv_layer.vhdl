@@ -20,9 +20,7 @@ entity bnn_row_conv_layer is
         reset       : in  std_logic;
 
         -- Weight configuration
-        w_en        : in  std_logic; -- enable shifting
-        w_in        : in  std_logic; -- input
-        w_out       : out std_logic; -- output/passthrough
+        weights     : in  std_logic_vector(0 to COUNT_OUT*KERNEL_COLS*KERNEL_ROWS-1);
 
         -- Input data
         row_in      : in  std_logic_vector(COUNT_IN*INPUT_COLS-1 downto 0);
@@ -38,8 +36,8 @@ end entity;
 architecture struct of bnn_row_conv_layer is
 
     constant ROW_OUT_WIDTH : integer := (INPUT_COLS-KERNEL_COLS+1)*OUTPUT_WIDTH;
+    constant NUM_WEIGHTS   : integer := KERNEL_COLS * KERNEL_ROWS;
 
-    signal w_pass : std_logic_vector(0 to COUNT_IN*(COUNT_OUT+1)-1);
     signal done_s : std_logic_vector(0 to COUNT_IN*COUNT_OUT-1);
 
 begin
@@ -57,9 +55,7 @@ bnn_row_conv_gen_gen: for IO in 0 to COUNT_OUT-1 generate
                 clk         => clk,
                 reset       => reset,
 
-                w_en        => w_en,
-                w_in        => w_pass(IO*COUNT_IN+II),
-                w_out       => w_pass((IO+1)*COUNT_IN+II),
+                weights     => weights(IO*NUM_WEIGHTS to (IO+1)*NUM_WEIGHTS-1),
 
                 row_in      => row_in((II+1)*INPUT_COLS-1 downto II*INPUT_COLS),
                 ready       => ready,
@@ -69,13 +65,6 @@ bnn_row_conv_gen_gen: for IO in 0 to COUNT_OUT-1 generate
             );
     end generate;
 end generate;
-
-
-w_in_gen: for I in 0 to COUNT_IN-1 generate
-        w_pass(I) <= w_in;
-    end generate;
-
-    w_out <= w_pass(COUNT_IN*COUNT_OUT);
 
     done <= done_s(0);
 

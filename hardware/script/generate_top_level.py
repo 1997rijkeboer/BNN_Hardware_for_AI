@@ -7,21 +7,25 @@ from gen_funcs import *
 with open("../src/top.vhdl.template", "r") as file:
     str = file.read()
 
-layer_num = 0
-(str, layer_num) = gen_act_uthres_layer(str, layer_num, 1, 8, 28, 123)
+weightsfp = open("../bnn_weights.txt", "r")
 
-(str, layer_num) = gen_conv_layer(str, layer_num, 1, 42, 5, 28, 3, 3)
-(str, layer_num) = gen_pool_max_layer(str, layer_num, 42, 5, 5, 26, 2, 2)
-(str, layer_num) = gen_act_layer(str, layer_num, 42, 5, 13)
+state = (str, 0, weightsfp)
+state = gen_act_uthres_layer(state, 1, 8, 28, 123)
 
-(str, layer_num) = gen_conv_layer(str, layer_num, 42, 78, 5, 13, 3, 3)
-(str, layer_num) = gen_pool_max_layer(str, layer_num, 42*78, 5, 5, 11, 2, 2)
-(str, layer_num) = gen_act_layer(str, layer_num, 42*78, 5, 5)
+state = gen_conv_layer(state, 1, 42, 5, 28, 3, 3)
+state = gen_pool_max_layer(state, 42, 5, 5, 26, 2, 2)
+state = gen_act_layer(state, 42, 5, 13)
 
-(str, layer_num) = gen_fc_layer(str, layer_num, 10, 20, 42*78*5, 5)
-(str, layer_num) = gen_arg_max_layer(str, layer_num, 10, 20, 4) #count, inputwidth, outputwidth = 4 bits as count = 10
+state = gen_conv_layer(state, 42, 78, 5, 13, 3, 3)
+state = gen_pool_max_layer(state, 42*78, 5, 5, 11, 2, 2)
+state = gen_act_layer(state, 42*78, 5, 5)
 
-str = gen_output(str, layer_num)
+state = gen_fc_layer(state, 10, 20, 42*78*5, 5)
+state = gen_arg_max_layer(state, 10, 20, 4) #count, inputwidth, outputwidth = 4 bits as count = 10
+
+str = gen_output(state)
+
+weightsfp.close()
 
 with open("../src/top.vhdl", "w") as file:
     file.write(str)

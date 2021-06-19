@@ -18,11 +18,6 @@ entity top is
         clk         : in  std_logic;
         reset       : in  std_logic;
 
-        -- Weight configuration
-        w_en        : in  std_logic; -- enable shifting
-        w_in        : in  std_logic; -- input
-        w_out       : out std_logic; -- output/passthrough
-
         -- Input data
         row_in      : in  std_logic_vector(INPUT_COLS*INPUT_WIDTH-1 downto 0);
         ready       : in  std_logic;
@@ -38,15 +33,11 @@ end entity;
 architecture struct of top is
 
     constant NUM_LAYERS : integer := $num_layers;
-    signal w_pass : std_logic_vector(0 to NUM_LAYERS);
     signal rd_pass : std_logic_vector(0 to NUM_LAYERS);
 
     signal row_0 : std_logic_vector(INPUT_COLS*INPUT_WIDTH-1 downto 0);
     $sig_gen
 begin
-
-    w_pass(0) <= w_in;
-    w_out <= w_pass(NUM_LAYERS);
 
     rd_pass(0) <= ready;
     done <= rd_pass(NUM_LAYERS);

@@ -1,5 +1,5 @@
 
-TOP=top_tb
+TOP=top
 SIM=sim
 PRJ=sources.prj
 SRC=$(filter-out vhdl work,$(shell cat $(PRJ)))

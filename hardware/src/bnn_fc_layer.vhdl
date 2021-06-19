@@ -19,9 +19,7 @@ entity bnn_fc_layer is
         reset       : in  std_logic;
 
         -- Weight configuration
-        w_en        : in  std_logic; -- enable shifting
-        w_in        : in  std_logic; -- input
-        w_out       : out std_logic; -- output/passthrough
+        weights     : in  std_logic_vector(0 to COUNT*INPUT_COLS*INPUT_ROWS-1);
 
         -- Input data
         row_in      : in  std_logic_vector(INPUT_COLS-1 downto 0);
@@ -37,8 +35,8 @@ end entity;
 architecture struct of bnn_fc_layer is
 
     constant ROW_OUT_WIDTH : integer := OUTPUT_WIDTH;
+    constant NUM_WEIGHTS   : integer := INPUT_COLS * INPUT_ROWS;
 
-    signal w_pass : std_logic_vector(0 to COUNT);
     signal done_s : std_logic_vector(0 to COUNT-1);
 
 begin
@@ -54,9 +52,7 @@ bnn_fc_gen: for I in 0 to COUNT-1 generate
             clk         => clk,
             reset       => reset,
 
-            w_en        => w_en,
-            w_in        => w_pass(I),
-            w_out       => w_pass(I+1),
+            weights     => weights(I*NUM_WEIGHTS to (I+1)*NUM_WEIGHTS-1),
 
             row_in      => row_in,
             ready       => ready,
@@ -65,9 +61,6 @@ bnn_fc_gen: for I in 0 to COUNT-1 generate
             done        => done_s(I)
         );
 end generate;
-
-    w_pass(0) <= w_in;
-    w_out <= w_pass(COUNT);
 
     done <= done_s(0);
 

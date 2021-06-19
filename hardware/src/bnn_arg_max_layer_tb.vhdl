@@ -21,7 +21,6 @@ architecture sim of arg_max_layer_tb is
     signal clk      : std_logic := '0';
     signal reset    : std_logic;
 
-    signal w_en, w_in, w_out    : std_logic;
     signal row_in               : std_logic_vector(COUNT*INPUT_WIDTH-1 downto 0);
     signal ready                : std_logic;
 
@@ -41,11 +40,6 @@ arg_max_inst: entity work.arg_max_layer
         clk         => clk,
         reset       => reset,
 
-        -- Weight configuration
-        w_en       => w_en, -- enable shifting
-        w_in       => w_in, -- input
-        w_out      => w_out, -- output/passthrough
-
         -- Input data
         row_in      => row_in,--count * input_width
         ready       => ready,
@@ -59,8 +53,6 @@ clk   <= not clk after CLK_PERIOD/2;
 
     process
     begin
-        w_en <= '0';
-        w_in <= '0';
         row_in <= (others => '0');
         ready  <= '0';
 
