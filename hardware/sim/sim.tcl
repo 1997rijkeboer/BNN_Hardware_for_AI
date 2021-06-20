@@ -38,7 +38,7 @@ for {set i 0} {$i < $numtests} {incr i} {
     set_value -radix bin ready 0
     run [expr $period * 10]
 
-    set res [get_value -radix dec row_out]
+    set res [get_value -radix unsigned row_out]
     puts "Output: $res\n"
 
     set_value -radix bin reset 1
