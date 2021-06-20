@@ -297,6 +297,52 @@ def gen_act_uthres_layer(state, count, input_width, input_cols, threshold):
     return (str, state[1]+1, state[2])
 
 ###############################################################################
+def gen_act_sthres_layer(state, count, input_width, input_cols, threshold):
+    row_in_width  = count*input_cols*input_width
+    row_out_width = count*input_cols
+
+    inst_temp = Template("""layer_${I}_act_sthres_inst: entity work.row_activation_sthreshold_layer
+    generic map (
+        COUNT       => $count,
+        INPUT_WIDTH => $input_width,
+        INPUT_COLS  => $input_cols,
+        THRESHOLD   => $threshold
+    )
+    port map (
+        clk         => clk,
+        reset       => reset,
+
+        row_in      => row_$I,
+        ready       => rd_pass($I),
+
+        row_out     => row_$Inext,
+        done        => rd_pass($Inext)
+    );
+
+    $inst_gen""")
+
+    inst = inst_temp.safe_substitute(
+        I           = state[1],
+        Inext       = state[1] + 1,
+        count       = count,
+        input_width = input_width,
+        input_cols  = input_cols,
+        threshold   = threshold
+    )
+
+    sig_temp = Template("""signal row_$Inext : std_logic_vector($row_out_width-1 downto 0);
+    $sig_gen""")
+
+    sig = sig_temp.safe_substitute(
+        Inext         = state[1] + 1,
+        row_out_width = row_out_width
+    )
+
+    str = Template(state[0]).safe_substitute(sig_gen=sig, inst_gen=inst)
+
+    return (str, state[1]+1, state[2])
+
+###############################################################################
 def gen_fc_layer(state, count_in, count_out, output_width, input_cols, input_rows):
     row_in_width  = count_in*input_cols
     row_out_width = count_out*output_width

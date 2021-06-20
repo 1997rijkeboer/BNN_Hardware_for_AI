@@ -1,11 +1,11 @@
--- Row-parallel activation/quantization with threshold layer (UNSIGNED)
+-- Row-parallel activation/quantization with threshold layer (SIGNED)
 
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
 
-entity row_activation_uthreshold_layer is
+entity row_activation_sthreshold_layer is
     generic (
         COUNT       : integer;
         INPUT_WIDTH : integer;
@@ -28,7 +28,7 @@ entity row_activation_uthreshold_layer is
 end entity;
 
 
-architecture struct of row_activation_uthreshold_layer is
+architecture struct of row_activation_sthreshold_layer is
 
     constant ROW_IN_WIDTH  : integer := INPUT_COLS*INPUT_WIDTH;
     constant ROW_OUT_WIDTH : integer := INPUT_COLS;
@@ -37,8 +37,8 @@ architecture struct of row_activation_uthreshold_layer is
 
 begin
 
-row_activation_uthreshold_gen: for I in 0 to COUNT-1 generate
-    row_activation_uthreshold_inst: entity work.row_activation_uthreshold
+row_activation_sthreshold_gen: for I in 0 to COUNT-1 generate
+    row_activation_sthreshold_inst: entity work.row_activation_sthreshold
         generic map (
             INPUT_WIDTH => INPUT_WIDTH,
             INPUT_COLS  => INPUT_COLS,
