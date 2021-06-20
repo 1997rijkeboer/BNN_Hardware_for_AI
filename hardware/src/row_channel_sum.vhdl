@@ -30,20 +30,30 @@ end entity;
 
 architecture rtl of row_channel_sum is
 
+--    function sum (x : std_logic_vector; width : integer) return integer is
+--        variable result : integer;
+--        variable half : integer;
+--    begin
+--        half := x'length/width;
+--
+--        if x'length = width then
+--            result := to_integer(signed(x));
+--        else
+--            result := sum(x(x'length-1 downto half*width), width)
+--                    + sum(x(half*width-1 downto 0), width);
+--        end if;
+--
+--        return result;
+--    end function;
+
     function sum (x : std_logic_vector; width : integer) return integer is
-        variable result : integer;
-        variable half : integer;
+        variable sum : integer;
     begin
-        half := x'length/width;
-
-        if x'length = width then
-            result := to_integer(signed(x));
-        else
-            result := sum(x(x'length-1 downto half*width), width)
-                    + sum(x(half*width-1 downto 0), width);
-        end if;
-
-        return result;
+        sum := 0;
+        for I in 0 to x'length/width-1 loop
+            sum := sum + to_integer(signed(x((I+1)*width-1+x'low downto I*width+x'low)));
+        end loop;
+        return sum;
     end function;
 
 begin
