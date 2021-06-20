@@ -75,10 +75,10 @@ def main():
               kernel_constraint="weight_clip")
 
     model = tf.keras.Sequential()
-    model.add(lq.layers.QuantConv2D(42, (3, 3),use_bias=False,
+    model.add(lq.layers.QuantConv2D(16, (3, 3),use_bias=False,
                                 input_shape=input_shape, **kwargs))
     model.add(tf.keras.layers.MaxPooling2D((2, 2)))
-    model.add(lq.layers.QuantConv2D(78, (3, 3), use_bias=False, **kwargs))
+    model.add(lq.layers.QuantConv2D(32, (3, 3), use_bias=False, **kwargs))
     model.add(tf.keras.layers.MaxPooling2D((2, 2)))
     model.add(tf.keras.layers.Flatten())
     # model.add(tf.keras.layers.BatchNormalization(scale=False))
