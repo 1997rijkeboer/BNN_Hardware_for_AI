@@ -1,8 +1,8 @@
 #!/usr/bin/tclsh
 # Set simulation inputs from test file
 
-log_wave [get_objects row_in ready row_out done rd_pass]
-#log_wave [get_objects]
+#log_wave [get_objects row_in ready row_out done rd_pass]
+log_wave [get_objects]
 
 
 set NUM_ROWS 28
@@ -26,7 +26,7 @@ set numtests [lindex $testdata 0]
 for {set i 0} {$i < $numtests} {incr i} {
     set offset [expr $i*($NUM_ROWS+1)+1]
     set label [lindex $testdata [expr $offset]]
-    puts "Input: $label"
+    #puts "Input: $label"
 
     for {set j 0} {$j < $NUM_ROWS} {incr j} {
         set line [lindex $testdata [expr $offset + $j + 1]]
@@ -39,7 +39,7 @@ for {set i 0} {$i < $numtests} {incr i} {
     run [expr $period * 10]
 
     set res [get_value -radix unsigned row_out]
-    puts "Output: $res\n"
+    puts "I: $label    O: $res"
 
     set_value -radix bin reset 1
     run $period
