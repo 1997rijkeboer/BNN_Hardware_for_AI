@@ -8,6 +8,7 @@ use IEEE.numeric_std.all;
 
 entity bnn_fc is
     generic (
+        COUNT_IN    : integer;
         OUTPUT_WIDTH : integer;
         INPUT_COLS  : integer;
         INPUT_ROWS  : integer
@@ -18,10 +19,10 @@ entity bnn_fc is
         reset       : in  std_logic;
 
         -- Weight configuration
-        weights     : in  std_logic_vector(0 to INPUT_COLS*INPUT_ROWS-1);
+        weights     : in  std_logic_vector(0 to COUNT_IN*INPUT_COLS*INPUT_ROWS-1);
 
         -- Input data
-        row_in      : in  std_logic_vector(INPUT_COLS-1 downto 0);
+        row_in      : in  std_logic_vector(COUNT_IN*INPUT_COLS-1 downto 0);
         ready       : in  std_logic;
 
         -- Output data
@@ -37,7 +38,7 @@ architecture rtl of bnn_fc is
     signal ready1 : std_logic;
 
     -- Weights
-    constant NUM_WEIGHTS : integer := INPUT_COLS * INPUT_ROWS;
+    constant NUM_WEIGHTS : integer := COUNT_IN * INPUT_COLS * INPUT_ROWS;
     --signal weights : std_logic_vector(0 to NUM_WEIGHTS-1); -- := (others => '0');
 
     -- Sum/output
@@ -65,17 +66,21 @@ begin
     process (clk)
         variable mul : std_logic;
         variable sum : signed(OUTPUT_WIDTH-1 downto 0);
+        variable index : integer;
     begin
         if rising_edge(clk) and ready = '1' then
             sum := (others => '0');
 
-            for I in 0 to INPUT_COLS-1 loop
-                mul := weights(row*INPUT_COLS + I) xnor row_in(I);
-                if mul = '1' then
-                    sum := sum + 1;
-                else
-                    sum := sum - 1;
-                end if;
+            for I in 0 to COUNT_IN-1 loop
+                for J in 0 to INPUT_COLS-1 loop
+                    index := I*INPUT_COLS*INPUT_ROWS + row*INPUT_COLS + J;
+                    mul := weights(index) xnor row_in((COUNT_IN-I)*INPUT_COLS-1-J);
+                    if mul = '1' then
+                        sum := sum + 1;
+                    else
+                        sum := sum - 1;
+                    end if;
+                end loop;
             end loop;
 
             sumreg <= sum;

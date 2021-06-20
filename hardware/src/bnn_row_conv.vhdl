@@ -68,7 +68,7 @@ begin
 
             for Y in 0 to KERNEL_ROWS-1 loop
                 for X in 0 to KERNEL_COLS-1 loop
-                    mul := weights(Y*KERNEL_COLS+X) xnor ibuffer(Y)(I+X);
+                    mul := weights((Y+1)*KERNEL_COLS-1-X) xnor ibuffer(Y)(I+X);
                     if mul = '1' then
                         sum := sum + 1;
                     else

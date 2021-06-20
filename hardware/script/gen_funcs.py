@@ -297,15 +297,16 @@ def gen_act_uthres_layer(state, count, input_width, input_cols, threshold):
     return (str, state[1]+1, state[2])
 
 ###############################################################################
-def gen_fc_layer(state, count, output_width, input_cols, input_rows):
-    row_in_width  = input_cols
-    row_out_width = count*output_width
+def gen_fc_layer(state, count_in, count_out, output_width, input_cols, input_rows):
+    row_in_width  = count_in*input_cols
+    row_out_width = count_out*output_width
 
-    weights = state[2].read(count*input_cols*input_rows)
+    weights = state[2].read(count_in*count_out*input_cols*input_rows)
 
     inst_temp = Template("""layer_${I}_fc_inst: entity work.bnn_fc_layer
     generic map (
-        COUNT       => $count,
+        COUNT_IN    => $count_in,
+        COUNT_OUT   => $count_out,
         OUTPUT_WIDTH => $output_width,
         INPUT_COLS  => $input_cols,
         INPUT_ROWS  => $input_rows
@@ -328,7 +329,8 @@ def gen_fc_layer(state, count, output_width, input_cols, input_rows):
     inst = inst_temp.safe_substitute(
         I           = state[1],
         Inext       = state[1] + 1,
-        count       = count,
+        count_in    = count_in,
+        count_out   = count_out,
         output_width = output_width,
         input_cols  = input_cols,
         input_rows  = input_rows,
