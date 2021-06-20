@@ -1,8 +1,8 @@
 #!/usr/bin/tclsh
 # Set simulation inputs from test file
 
-#log_wave [get_objects /top_tb/top_inst/row_in /top_tb/top_inst/ready /top_tb/top_inst/row_out /top_tb/top_inst/done /top_tb/top_inst/w_pass /top_tb/top_inst/rd_pass]
-log_wave [get_objects]
+log_wave [get_objects row_in ready row_out done rd_pass]
+#log_wave [get_objects]
 
 
 set NUM_ROWS 28
