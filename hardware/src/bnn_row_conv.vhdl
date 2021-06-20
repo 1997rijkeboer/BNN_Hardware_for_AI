@@ -50,9 +50,9 @@ begin
     process (clk)
     begin
         if rising_edge(clk) and ready = '1' then
-            ibuffer(0) <= row_in;
+            ibuffer(KERNEL_ROWS-1) <= row_in;
             if KERNEL_ROWS > 1 then
-                ibuffer(1 to KERNEL_ROWS-1) <= ibuffer(0 to KERNEL_ROWS-2);
+                ibuffer(0 to KERNEL_ROWS-2) <= ibuffer(1 to KERNEL_ROWS-1);
             end if;
         end if;
     end process;
@@ -69,6 +69,7 @@ begin
             for Y in 0 to KERNEL_ROWS-1 loop
                 for X in 0 to KERNEL_COLS-1 loop
                     mul := weights((Y+1)*KERNEL_COLS-1-X) xnor ibuffer(Y)(I+X);
+                    --mul := weights(Y*KERNEL_COLS+X) xnor ibuffer(Y)(I+X);
                     if mul = '1' then
                         sum := sum + 1;
                     else

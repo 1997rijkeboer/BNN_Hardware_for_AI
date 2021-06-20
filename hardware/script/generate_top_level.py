@@ -13,7 +13,7 @@ conv1 = 16
 conv2 = 32
 
 state = (str, 0, weightsfp)
-state = gen_act_uthres_layer(state, 1, 8, 28, 1)
+state = gen_act_uthres_layer(state, 1, 8, 28, 128)
 
 state = gen_conv_layer(state, 1, conv1, 5, 28, 3, 3)
 state = gen_pool_max_layer(state, conv1, 5, 5, 26, 2, 2)
