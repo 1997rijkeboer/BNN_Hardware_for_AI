@@ -73,7 +73,8 @@ begin
 
             for I in 0 to COUNT_IN-1 loop
                 for J in 0 to INPUT_COLS-1 loop
-                    index := I*INPUT_COLS*INPUT_ROWS + row*INPUT_COLS + J;
+                    --index := I*INPUT_COLS*INPUT_ROWS + row*INPUT_COLS + J;
+                    index := row*INPUT_COLS*COUNT_IN + I*INPUT_COLS + J;
                     mul := weights(index) xnor row_in((COUNT_IN-I)*INPUT_COLS-1-J);
                     if mul = '1' then
                         sum := sum + 1;

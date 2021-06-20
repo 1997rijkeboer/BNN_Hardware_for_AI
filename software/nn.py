@@ -55,7 +55,8 @@ def save_weights(model):
                 for i in range(0,row_size):
                     for z in range(0,channels):
                         for j in range(0,column_size):
-                            index = (row_size*column_size*z)+(column_size*j)+i
+                            #index = (row_size*column_size*z)+(column_size*i)+j
+                            index = channels*column_size*i + channels*j + z
                             x = weights[0][index][k]
                             x = int((x+1)/2)
                             f.write(str(x))
