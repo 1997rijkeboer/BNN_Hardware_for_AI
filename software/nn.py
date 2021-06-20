@@ -44,11 +44,13 @@ def save_weights(model):
 
         elif "dense" in name:
             output_size = weights.shape[2]
-            # input_size = weights.shape[1]
+            input_size = weights.shape[1]
             last_layer = model.get_layer('max_pooling2d_1')
             row_size = last_layer.output_shape[1]
             column_size = last_layer.output_shape[2]
             channels = last_layer.output_shape[3]
+            # print(channels*row_size*column_size)
+            # print(input_size)
             for k in range(0,output_size):
                 for i in range(0,row_size):
                     for z in range(0,channels):
