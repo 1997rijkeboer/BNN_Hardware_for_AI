@@ -63,7 +63,7 @@ begin
 
 
     -- Input sum
-    process (clk)
+    process (clk, ready)
         variable mul : std_logic;
         variable sum : signed(OUTPUT_WIDTH-1 downto 0);
         variable index : integer;
@@ -92,15 +92,13 @@ begin
     -- Output sum
 MULTI_ROW: if INPUT_ROWS /= 1 generate
     process (clk)
-        variable sum : signed(OUTPUT_WIDTH-1 downto 0);
     begin
         if rising_edge(clk) then
             --done <= '0';
             if reset = '1' then
                 row <= 0;
                 done <= '0';
-                outreg <= (others => '0');
-            elsif ready1 = '1' then
+            elsif ready = '1' then
                 if row = INPUT_ROWS-1 then
                     row <= 0;
                     done <= '1';
@@ -108,8 +106,12 @@ MULTI_ROW: if INPUT_ROWS /= 1 generate
                     row <= row + 1;
                     done <= '0';
                 end if;
+            end if;
 
-                if row = 0 then
+            if reset = '1' then
+                outreg <= (others => '0');
+            elsif ready1 = '1' then
+                if row = 1 then
                     outreg <= sumreg;
                 else
                     outreg <= outreg + sumreg;
@@ -133,6 +135,5 @@ end generate;
 
     -- Output
     row_out <= std_logic_vector(outreg);
-
 
 end architecture;

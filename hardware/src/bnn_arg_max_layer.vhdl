@@ -8,7 +8,6 @@ entity arg_max_layer is
         COUNT       : integer;
         INPUT_WIDTH : integer;
         OUTPUT_WIDTH : integer
-        --INPUT_COLS  : integer := 1
     );
     port (
         -- System
@@ -30,35 +29,28 @@ architecture struct of arg_max_layer is
     -- Maximum negative number of width OUTPUT_WIDTH
     constant MAX_NEG : signed(INPUT_WIDTH-1 downto 0) := (INPUT_WIDTH-1 => '1', others => '0');
     signal max_index : integer;
-    --signal inp : signed(INPUT_WIDTH-1 downto 0);
-    --signal max : signed(INPUT_WIDTH-1 downto 0) := "1000";
-    --signal index : integer;
 
 begin
 
     -- Max Index
-    process (clk)
+    process (clk, ready)
         variable max : signed(INPUT_WIDTH-1 downto 0);
         variable inp : signed(INPUT_WIDTH-1 downto 0);
-
     begin
         if rising_edge(clk) and ready = '1' then
-            max := (MAX_NEG);   --VIVADO GEEFT ERROR BIJ DIT
-                for X in 0 to COUNT-1 loop
-                    inp := signed(row_in((X+1)*INPUT_WIDTH-1 downto X*INPUT_WIDTH));
-                    if inp > max then
-                        max := inp;
-                        max_index <= X;
-                    end if;
-                end loop;
+            max := MAX_NEG;
+            for X in 0 to COUNT-1 loop
+                inp := signed(row_in((X+1)*INPUT_WIDTH-1 downto X*INPUT_WIDTH));
+                if inp > max then
+                    max := inp;
+                    max_index <= X;
+                end if;
+            end loop;
         end if;
     end process;
 
     -- Output
-    process (max_index)
-    begin
-        row_out <= std_logic_vector(to_unsigned(max_index, row_out'length));
-    end process;
+    row_out <= std_logic_vector(to_unsigned(max_index, row_out'length));
 
     -- Reset
     process (clk)
