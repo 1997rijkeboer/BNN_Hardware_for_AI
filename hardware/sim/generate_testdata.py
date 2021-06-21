@@ -27,7 +27,7 @@ def main():
     #write_func = sys.stdout.write
 
     write_func(f"{num_tests}\n")
-    for i in np.random.randint(0, len(test_labels), num_tests):
+    for i in range(0, num_tests): #np.random.randint(0, len(test_labels), num_tests):
         write_func(f"{test_labels[i]}\n")
         print_digit(test_images[i], write_func)
 

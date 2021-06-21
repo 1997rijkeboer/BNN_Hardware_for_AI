@@ -27,7 +27,10 @@ isim:
 	xsim --t wave.tcl $(SIM) --gui
 
 
-$(SIM).wdb: sim.tcl xelab.pb
+testdata.txt: generate_testdata.py
+	./$<
+
+$(SIM).wdb: sim.tcl xelab.pb testdata.txt
 	xsim --t sim.tcl $(SIM) | sed '/^##.*$$/d'
 
 xelab.pb: $(SRC)

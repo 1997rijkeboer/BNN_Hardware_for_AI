@@ -35,9 +35,21 @@ architecture struct of top is
     constant NUM_LAYERS : integer := $num_layers;
     signal rd_pass : std_logic_vector(0 to NUM_LAYERS);
 
+    type act_dbg_t is array(0 to 9) of std_logic_vector(19 downto 0);
+    signal act_row : std_logic_vector(199 downto 0);
+    signal act_dbg : act_dbg_t;
+
     signal row_0 : std_logic_vector(INPUT_COLS*INPUT_WIDTH-1 downto 0);
     $sig_gen
 begin
+
+    act_row <= row_9;
+    process (act_row)
+    begin
+        for I in 0 to 9 loop
+            act_dbg(I) <= act_row((I+1)*20-1 downto I*20);
+        end loop;
+    end process;
 
     rd_pass(0) <= ready;
     done <= rd_pass(NUM_LAYERS);

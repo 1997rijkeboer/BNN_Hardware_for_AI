@@ -2,7 +2,7 @@
 # Set simulation inputs from test file
 
 #log_wave [get_objects row_in ready row_out done rd_pass]
-log_wave [get_objects]
+log_wave [get_objects -r]
 
 
 set NUM_ROWS 28
@@ -39,7 +39,8 @@ for {set i 0} {$i < $numtests} {incr i} {
     run [expr $period * 10]
 
     set res [get_value -radix unsigned row_out]
-    puts "I: $label    O: $res"
+    set act [regsub -all "," [get_value -radix dec act_dbg] ",\t"]
+    puts "I: $label    O: $res    $act"
 
     set_value -radix bin reset 1
     run $period

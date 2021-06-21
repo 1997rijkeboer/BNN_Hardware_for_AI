@@ -51,6 +51,8 @@ def save_weights(model):
             channels = last_layer.output_shape[3]
             # print(channels*row_size*column_size)
             # print(input_size)
+            print(weights.shape)
+            print(last_layer.output_shape)
             for k in range(0,output_size):
                 for i in range(0,row_size):
                     for z in range(0,channels):
@@ -100,10 +102,12 @@ def main():
 
     history = model.fit(X_train, Y_train, epochs=2, shuffle=True, batch_size=64)
     test_loss, test_acc = model.evaluate(X_test, Y_test)
+    model.pop()
     predictions = model.predict(X_test)
 
     print('\nAccuracy:', test_acc)
-    print("prediction: ", np.argmax(predictions[0]))
+    for i in range(0,10):
+        print("prediction: ", np.argmax(predictions[i]), predictions[i])
     save_results(history.history['accuracy'], history.history['loss'])
     save_weights(model)
 
