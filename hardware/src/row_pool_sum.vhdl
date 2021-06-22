@@ -107,7 +107,6 @@ begin
         end if;
     end process;
 
-    --done <= '1' when (ready1 = '1' and row = POOL_ROWS-1) else '0';
 
     -- Output
     process (outreg)

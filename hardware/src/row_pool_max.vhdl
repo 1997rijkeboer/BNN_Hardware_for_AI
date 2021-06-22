@@ -87,13 +87,13 @@ begin
 
     -- Output max
     process (clk)
-        --variable max : signed(OUTPUT_WIDTH-1 downto 0);
     begin
         if rising_edge(clk) then
             done <= '0';
             if reset = '1' then
                 row <= 0;
                 done <= '0';
+                outreg <= (others => MAX_NEG);
             elsif ready1 = '1' then
                 if row = POOL_ROWS-1 then
                     row <= 0;
@@ -102,11 +102,7 @@ begin
                     row <= row + 1;
                     done <= '0';
                 end if;
-            end if;
 
-            if reset = '1' then
-                outreg <= (others => MAX_NEG);
-            elsif ready1 = '1' then
                 if row = 0 then
                     outreg <= maxreg;
                 else
@@ -120,7 +116,6 @@ begin
         end if;
     end process;
 
-    --done <= '1' when (ready1 = '1' and row = POOL_ROWS-1) else '0';
 
     -- Output
     process (outreg)

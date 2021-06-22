@@ -26,7 +26,6 @@ set numtests [lindex $testdata 0]
 for {set i 0} {$i < $numtests} {incr i} {
     set offset [expr $i*($NUM_ROWS+1)+1]
     set label [lindex $testdata [expr $offset]]
-    #puts "Input: $label"
 
     for {set j 0} {$j < $NUM_ROWS} {incr j} {
         set line [lindex $testdata [expr $offset + $j + 1]]

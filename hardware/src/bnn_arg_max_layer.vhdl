@@ -15,7 +15,7 @@ entity arg_max_layer is
         reset       : in  std_logic;
 
         -- Input data
-        row_in      : in  std_logic_vector(COUNT*INPUT_WIDTH-1 downto 0); --count * input_width
+        row_in      : in  std_logic_vector(COUNT*INPUT_WIDTH-1 downto 0);
         ready       : in  std_logic;
 
         -- Output data

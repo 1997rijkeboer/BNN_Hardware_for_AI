@@ -60,9 +60,7 @@ bnn_row_conv_gen_gen: for IO in 0 to COUNT_OUT-1 generate
                 row_in      => row_in((COUNT_IN-II-1+1)*INPUT_COLS-1 downto (COUNT_IN-II-1)*INPUT_COLS),
                 ready       => ready,
 
-                --row_out     => row_out((IO*COUNT_IN+II+1)*ROW_OUT_WIDTH-1 downto (IO*COUNT_IN+II)*ROW_OUT_WIDTH),
-                --row_out     => row_out((COUNT_IN*COUNT_OUT-II*COUNT_OUT-IO-1+1)*ROW_OUT_WIDTH-1 downto (COUNT_IN*COUNT_OUT-II*COUNT_OUT-IO-1)*ROW_OUT_WIDTH), -- WORKS 2conv1
-                row_out     => row_out(((II+1)*COUNT_OUT-IO-1+1)*ROW_OUT_WIDTH-1 downto ((II+1)*COUNT_OUT-IO-1)*ROW_OUT_WIDTH), -- WORKS 2conv1
+                row_out     => row_out(((II+1)*COUNT_OUT-IO-1+1)*ROW_OUT_WIDTH-1 downto ((II+1)*COUNT_OUT-IO-1)*ROW_OUT_WIDTH),
                 done        => done_s(IO*COUNT_IN+II)
             );
     end generate;

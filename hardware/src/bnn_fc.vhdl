@@ -39,7 +39,6 @@ architecture rtl of bnn_fc is
 
     -- Weights
     constant NUM_WEIGHTS : integer := COUNT_IN * INPUT_COLS * INPUT_ROWS;
-    --signal weights : std_logic_vector(0 to NUM_WEIGHTS-1); -- := (others => '0');
 
     -- Sum/output
     signal sumreg : signed(OUTPUT_WIDTH-1 downto 0);
@@ -73,7 +72,6 @@ begin
 
             for I in 0 to COUNT_IN-1 loop
                 for J in 0 to INPUT_COLS-1 loop
-                    --index := I*INPUT_COLS*INPUT_ROWS + row*INPUT_COLS + J;
                     index := row*INPUT_COLS*COUNT_IN + I*INPUT_COLS + J;
                     mul := weights(index) xnor row_in((COUNT_IN-I)*INPUT_COLS-1-J);
                     if mul = '1' then

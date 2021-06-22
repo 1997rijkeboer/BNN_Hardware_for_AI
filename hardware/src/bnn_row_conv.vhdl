@@ -35,11 +35,10 @@ architecture rtl of bnn_row_conv is
 
     -- Weights
     constant NUM_WEIGHTS : integer := KERNEL_COLS * KERNEL_ROWS;
-    --signal weights : std_logic_vector(0 to NUM_WEIGHTS-1) := WEIGHTS;
 
     -- Input buffer
     type ibuffer_t is array(0 to KERNEL_ROWS-1) of std_logic_vector(INPUT_COLS-1 downto 0);
-    signal ibuffer : ibuffer_t; -- := (others => (others => '0'));
+    signal ibuffer : ibuffer_t;
 
     -- Output
     signal row : integer range 0 to KERNEL_ROWS-1;
@@ -69,7 +68,6 @@ begin
             for Y in 0 to KERNEL_ROWS-1 loop
                 for X in 0 to KERNEL_COLS-1 loop
                     mul := weights((Y+1)*KERNEL_COLS-1-X) xnor ibuffer(Y)(I+X);
-                    --mul := weights(Y*KERNEL_COLS+X) xnor ibuffer(Y)(I+X);
                     if mul = '1' then
                         sum := sum + 1;
                     else
