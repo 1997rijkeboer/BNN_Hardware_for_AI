@@ -34,9 +34,27 @@ architecture struct of row_channel_sum_layer is
     constant ROW_IN_WIDTH  : integer := CHANNELS*INPUT_COLS*INPUT_WIDTH;
     constant ROW_OUT_WIDTH : integer := INPUT_COLS*OUTPUT_WIDTH;
 
+    signal row_in_reorder : std_logic_vector(COUNT*CHANNELS*INPUT_COLS*INPUT_WIDTH-1 downto 0);
+
     signal done_s : std_logic_vector(0 to COUNT-1);
 
 begin
+
+    process (row_in)
+        variable reorder : std_logic_vector(COUNT*CHANNELS*INPUT_COLS*INPUT_WIDTH-1 downto 0);
+        variable src, dst : integer;
+    begin
+        for IO in 0 to COUNT-1 loop
+            for II in 0 to CHANNELS-1 loop
+                for X in 0 to INPUT_COLS-1 loop
+                    src := IO*CHANNELS*INPUT_COLS + II*INPUT_COLS + X;
+                    dst := IO*CHANNELS*INPUT_COLS + X*CHANNELS + II;
+                    reorder((dst+1)*INPUT_WIDTH-1 downto dst*INPUT_WIDTH) := row_in((src+1)*INPUT_WIDTH-1 downto src*INPUT_WIDTH);
+                end loop;
+            end loop;
+        end loop;
+        row_in_reorder <= reorder;
+    end process;
 
 row_channel_sum_gen: for I in 0 to COUNT-1 generate
     row_channel_sum_inst: entity work.row_channel_sum
@@ -50,7 +68,7 @@ row_channel_sum_gen: for I in 0 to COUNT-1 generate
             clk         => clk,
             reset       => reset,
 
-            row_in      => row_in((I+1)*ROW_IN_WIDTH-1 downto I*ROW_IN_WIDTH),
+            row_in      => row_in_reorder((I+1)*ROW_IN_WIDTH-1 downto I*ROW_IN_WIDTH),
             ready       => ready,
 
             row_out     => row_out((I+1)*ROW_OUT_WIDTH-1 downto I*ROW_OUT_WIDTH),
