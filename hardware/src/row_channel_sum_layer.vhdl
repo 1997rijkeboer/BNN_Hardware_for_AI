@@ -47,7 +47,7 @@ begin
         for IO in 0 to COUNT-1 loop
             for II in 0 to CHANNELS-1 loop
                 for X in 0 to INPUT_COLS-1 loop
-                    src := IO*CHANNELS*INPUT_COLS + II*INPUT_COLS + X;
+                    src := IO*INPUT_COLS + II*INPUT_COLS*COUNT + X;
                     dst := IO*CHANNELS*INPUT_COLS + X*CHANNELS + II;
                     reorder((dst+1)*INPUT_WIDTH-1 downto dst*INPUT_WIDTH) := row_in((src+1)*INPUT_WIDTH-1 downto src*INPUT_WIDTH);
                 end loop;
