@@ -39,8 +39,8 @@ for {set i 0} {$i < $numtests} {incr i} {
     run [expr $period * 10]
 
     set res [get_value -radix unsigned row_out]
-    set act [regsub -all "," [get_value -radix dec act_dbg] ",\t"]
-    puts "I: $label    O: $res    $act"
+    set dbg [regsub -all "," [get_value -radix dec dbg_row] ",\t"]
+    puts "I: $label    O: $res    $dbg"
 
     set_value -radix bin reset 1
     run $period
