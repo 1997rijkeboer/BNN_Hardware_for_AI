@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
@@ -30,12 +32,10 @@ def save_weights(model):
     for layer in model.layers:
         name = layer.get_config()['name']
         weights = np.array(layer.get_weights())
-        # print(weights.size,weights.shape)
         if "conv" in name:
             channels = weights.shape[3]
             num_filters = weights.shape[4]
             window = weights.shape[1]
-            # f.write(str(window)+","+str(window)+","+str(channels)+","+str(num_filters)+"\n")
             for n in range(0,num_filters):
                 for k in range(0,channels):
                     for i in range(0,window):
@@ -43,21 +43,27 @@ def save_weights(model):
                             x = weights[0][i][j][k][n]
                             x = int((x+1)/2)
                             f.write(str(x))
-                        # f.write("\n")
-                    # f.write("\n")
 
         elif "dense" in name:
             output_size = weights.shape[2]
             input_size = weights.shape[1]
-            # f.write(str(input_size)+","+str(output_size)+"\n")
+            last_layer = model.get_layer('max_pooling2d_1')
+            row_size = last_layer.output_shape[1]
+            column_size = last_layer.output_shape[2]
+            channels = last_layer.output_shape[3]
+            # print(channels*row_size*column_size)
+            # print(input_size)
+            print(weights.shape)
+            print(last_layer.output_shape)
             for k in range(0,output_size):
-                # f.write("index "+str(i)+": ")
-                for i in range(0,input_size):
-                    x = weights[0][i][k]
-                    x = int((x+1)/2)
-                    f.write(str(x))
-                # f.write("\n")s
-        # print(weights)
+                for i in range(0,row_size):
+                    for z in range(0,channels):
+                        for j in range(0,column_size):
+                            #index = (row_size*column_size*z)+(column_size*i)+j
+                            index = channels*column_size*i + channels*j + z
+                            x = weights[0][index][k]
+                            x = int((x+1)/2)
+                            f.write(str(x))
     f.close()
 
 def main():
@@ -75,10 +81,10 @@ def main():
               kernel_constraint="weight_clip")
 
     model = tf.keras.Sequential()
-    model.add(lq.layers.QuantConv2D(42, (3, 3),use_bias=False,
+    model.add(lq.layers.QuantConv2D(16, (3, 3),use_bias=False,
                                 input_shape=input_shape, **kwargs))
     model.add(tf.keras.layers.MaxPooling2D((2, 2)))
-    model.add(lq.layers.QuantConv2D(78, (3, 3), use_bias=False, **kwargs))
+    model.add(lq.layers.QuantConv2D(32, (3, 3), use_bias=False, **kwargs))
     model.add(tf.keras.layers.MaxPooling2D((2, 2)))
     model.add(tf.keras.layers.Flatten())
     # model.add(tf.keras.layers.BatchNormalization(scale=False))
@@ -98,10 +104,12 @@ def main():
 
     history = model.fit(X_train, Y_train, epochs=2, shuffle=True, batch_size=64)
     test_loss, test_acc = model.evaluate(X_test, Y_test)
+    model.pop()
     predictions = model.predict(X_test)
 
     print('\nAccuracy:', test_acc)
-    print("prediction: ", np.argmax(predictions[0]))
+    for i in range(0,10):
+        print("prediction: ", np.argmax(predictions[i]), predictions[i])
     save_results(history.history['accuracy'], history.history['loss'])
     save_weights(model)
 

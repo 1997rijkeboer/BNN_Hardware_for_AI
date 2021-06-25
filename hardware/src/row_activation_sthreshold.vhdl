@@ -1,11 +1,11 @@
--- Row-parallel activation/quantization with threshold block (UNSIGNED)
+-- Row-parallel activation/quantization with threshold block (SIGNED)
 
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
 
-entity row_activation_uthreshold is
+entity row_activation_sthreshold is
     generic (
         INPUT_WIDTH : integer;
         INPUT_COLS  : integer;
@@ -27,13 +27,13 @@ entity row_activation_uthreshold is
 end entity;
 
 
-architecture rtl of row_activation_uthreshold is
+architecture rtl of row_activation_sthreshold is
 begin
 
     process (row_in)
     begin
         for I in 0 to INPUT_COLS-1 loop
-            if to_integer(unsigned(row_in((I+1)*INPUT_WIDTH-1 downto I*INPUT_WIDTH))) >= THRESHOLD then
+            if to_integer(signed(row_in((I+1)*INPUT_WIDTH-1 downto I*INPUT_WIDTH))) >= THRESHOLD then
                 row_out(I) <= '1';
             else
                 row_out(I) <= '0';

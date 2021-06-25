@@ -40,6 +40,8 @@ architecture rtl of row_pool_sum is
     signal sumreg : sumreg_t;
     signal outreg : sumreg_t;
 
+    constant OFFSET : integer := INPUT_COLS-OUTPUT_COLS*POOL_COLS;
+
     signal row : integer range 0 to POOL_ROWS-1;
 
 begin
@@ -60,6 +62,7 @@ begin
     -- Input sum
     process (clk)
         variable sum : signed(OUTPUT_WIDTH-1 downto 0);
+        variable inp : signed(INPUT_WIDTH-1 downto 0);
         variable index : integer;
     begin
         if rising_edge(clk) and ready = '1' then
@@ -67,8 +70,9 @@ begin
                 sum := (others => '0');
 
                 for X in 0 to POOL_COLS-1 loop
-                    index := I*POOL_COLS + X;
-                    sum := sum + signed(row_in((index+1)*INPUT_WIDTH-1 downto index*INPUT_WIDTH));
+                    index := I*POOL_COLS + X + OFFSET;
+                    inp := signed(row_in((index+1)*INPUT_WIDTH-1 downto index*INPUT_WIDTH));
+                    sum := sum + inp;
                 end loop;
 
                 sumreg(I) <= sum;
@@ -107,7 +111,6 @@ begin
         end if;
     end process;
 
-    --done <= '1' when (ready1 = '1' and row = POOL_ROWS-1) else '0';
 
     -- Output
     process (outreg)

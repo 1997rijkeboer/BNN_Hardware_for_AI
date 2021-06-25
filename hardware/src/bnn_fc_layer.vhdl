@@ -8,7 +8,8 @@ use IEEE.numeric_std.all;
 
 entity bnn_fc_layer is
     generic (
-        COUNT       : integer;
+        COUNT_IN    : integer;
+        COUNT_OUT   : integer;
         OUTPUT_WIDTH : integer;
         INPUT_COLS  : integer;
         INPUT_ROWS  : integer
@@ -19,16 +20,14 @@ entity bnn_fc_layer is
         reset       : in  std_logic;
 
         -- Weight configuration
-        w_en        : in  std_logic; -- enable shifting
-        w_in        : in  std_logic; -- input
-        w_out       : out std_logic; -- output/passthrough
+        weights     : in  std_logic_vector(0 to COUNT_IN*COUNT_OUT*INPUT_COLS*INPUT_ROWS-1);
 
         -- Input data
-        row_in      : in  std_logic_vector(INPUT_COLS-1 downto 0);
+        row_in      : in  std_logic_vector(COUNT_IN*INPUT_COLS-1 downto 0);
         ready       : in  std_logic;
 
         -- Output data
-        row_out     : out std_logic_vector(COUNT*OUTPUT_WIDTH-1 downto 0);
+        row_out     : out std_logic_vector(COUNT_OUT*OUTPUT_WIDTH-1 downto 0);
         done        : out std_logic
     );
 end entity;
@@ -37,15 +36,16 @@ end entity;
 architecture struct of bnn_fc_layer is
 
     constant ROW_OUT_WIDTH : integer := OUTPUT_WIDTH;
+    constant NUM_WEIGHTS   : integer := COUNT_IN * INPUT_COLS * INPUT_ROWS;
 
-    signal w_pass : std_logic_vector(0 to COUNT);
-    signal done_s : std_logic_vector(0 to COUNT-1);
+    signal done_s : std_logic_vector(0 to COUNT_OUT-1);
 
 begin
 
-bnn_fc_gen: for I in 0 to COUNT-1 generate
+bnn_fc_gen: for I in 0 to COUNT_OUT-1 generate
     bnn_fc_inst: entity work.bnn_fc
         generic map (
+            COUNT_IN    => COUNT_IN,
             OUTPUT_WIDTH => OUTPUT_WIDTH,
             INPUT_COLS  => INPUT_COLS,
             INPUT_ROWS  => INPUT_ROWS
@@ -54,9 +54,7 @@ bnn_fc_gen: for I in 0 to COUNT-1 generate
             clk         => clk,
             reset       => reset,
 
-            w_en        => w_en,
-            w_in        => w_pass(I),
-            w_out       => w_pass(I+1),
+            weights     => weights(I*NUM_WEIGHTS to (I+1)*NUM_WEIGHTS-1),
 
             row_in      => row_in,
             ready       => ready,
@@ -65,9 +63,6 @@ bnn_fc_gen: for I in 0 to COUNT-1 generate
             done        => done_s(I)
         );
 end generate;
-
-    w_pass(0) <= w_in;
-    w_out <= w_pass(COUNT);
 
     done <= done_s(0);
 

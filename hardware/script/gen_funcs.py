@@ -1,11 +1,14 @@
 from string import Template
+import re
 
-
+# status = (vhdl str, layer_num, weightfile)
 
 ###############################################################################
-def gen_conv_layer(str, layer_num, count_in, count_out, output_width, input_cols, kernel_cols, kernel_rows):
+def gen_conv_layer(state, count_in, count_out, output_width, input_cols, kernel_cols, kernel_rows):
     row_in_width  = count_in*input_cols
     row_out_width = count_in*count_out*(input_cols-kernel_cols+1)*output_width
+
+    weights = state[2].read(count_in*count_out*kernel_cols*kernel_rows)
 
     inst_temp = Template("""layer_${I}_conv_inst: entity work.bnn_row_conv_layer
     generic map (
@@ -20,9 +23,7 @@ def gen_conv_layer(str, layer_num, count_in, count_out, output_width, input_cols
         clk         => clk,
         reset       => reset,
 
-        w_en        => w_en,
-        w_in        => w_pass($I),
-        w_out       => w_pass($Inext),
+        weights     => "$weights",
 
         row_in      => row_$I,
         ready       => rd_pass($I),
@@ -34,30 +35,79 @@ def gen_conv_layer(str, layer_num, count_in, count_out, output_width, input_cols
     $inst_gen""")
 
     inst = inst_temp.safe_substitute(
-        I           = layer_num,
-        Inext       = layer_num + 1,
+        I           = state[1],
+        Inext       = state[1] + 1,
         count_in    = count_in,
         count_out   = count_out,
         output_width = output_width,
         input_cols  = input_cols,
         kernel_cols = kernel_cols,
-        kernel_rows = kernel_rows
+        kernel_rows = kernel_rows,
+        weights     = weights
     )
 
     sig_temp = Template("""signal row_$Inext : std_logic_vector($row_out_width-1 downto 0);
     $sig_gen""")
 
     sig = sig_temp.safe_substitute(
-        Inext         = layer_num + 1,
+        Inext         = state[1] + 1,
         row_out_width = row_out_width
     )
 
-    str = Template(str).safe_substitute(sig_gen=sig, inst_gen=inst)
+    str = Template(state[0]).safe_substitute(sig_gen=sig, inst_gen=inst)
 
-    return (str, layer_num+1)
+    return (str, state[1]+1, state[2])
 
 ###############################################################################
-def gen_pool_max_layer(str, layer_num, count, input_width, output_width, input_cols, pool_cols, pool_rows):
+def gen_channel_sum_layer(state, count, input_width, output_width, input_cols, channels):
+    row_in_width  = count*channels*input_cols*input_width
+    row_out_width = count*input_cols*output_width
+
+    inst_temp = Template("""layer_${I}_channel_sum_inst: entity work.row_channel_sum_layer
+    generic map (
+        COUNT       => $count,
+        INPUT_WIDTH => $input_width,
+        OUTPUT_WIDTH => $output_width,
+        INPUT_COLS  => $input_cols,
+        CHANNELS    => $channels
+    )
+    port map (
+        clk         => clk,
+        reset       => reset,
+
+        row_in      => row_$I,
+        ready       => rd_pass($I),
+
+        row_out     => row_$Inext,
+        done        => rd_pass($Inext)
+    );
+
+    $inst_gen""")
+
+    inst = inst_temp.safe_substitute(
+        I           = state[1],
+        Inext       = state[1] + 1,
+        count       = count,
+        input_width = input_width,
+        output_width = output_width,
+        input_cols  = input_cols,
+        channels    = channels
+    )
+
+    sig_temp = Template("""signal row_$Inext : std_logic_vector($row_out_width-1 downto 0);
+    $sig_gen""")
+
+    sig = sig_temp.safe_substitute(
+        Inext         = state[1] + 1,
+        row_out_width = row_out_width
+    )
+
+    str = Template(state[0]).safe_substitute(sig_gen=sig, inst_gen=inst)
+
+    return (str, state[1]+1, state[2])
+
+###############################################################################
+def gen_pool_max_layer(state, count, input_width, output_width, input_cols, pool_cols, pool_rows):
     row_in_width  = count*input_cols*input_width
     row_out_width = count*(input_cols//pool_cols)*output_width
 
@@ -74,10 +124,6 @@ def gen_pool_max_layer(str, layer_num, count, input_width, output_width, input_c
         clk         => clk,
         reset       => reset,
 
-        w_en        => w_en,
-        w_in        => w_pass($I),
-        w_out       => w_pass($Inext),
-
         row_in      => row_$I,
         ready       => rd_pass($I),
 
@@ -88,8 +134,8 @@ def gen_pool_max_layer(str, layer_num, count, input_width, output_width, input_c
     $inst_gen""")
 
     inst = inst_temp.safe_substitute(
-        I           = layer_num,
-        Inext       = layer_num + 1,
+        I           = state[1],
+        Inext       = state[1] + 1,
         count       = count,
         input_width = input_width,
         output_width = output_width,
@@ -102,16 +148,16 @@ def gen_pool_max_layer(str, layer_num, count, input_width, output_width, input_c
     $sig_gen""")
 
     sig = sig_temp.safe_substitute(
-        Inext         = layer_num + 1,
+        Inext         = state[1] + 1,
         row_out_width = row_out_width
     )
 
-    str = Template(str).safe_substitute(sig_gen=sig, inst_gen=inst)
+    str = Template(state[0]).safe_substitute(sig_gen=sig, inst_gen=inst)
 
-    return (str, layer_num+1)
+    return (str, state[1]+1, state[2])
 
 ###############################################################################
-def gen_pool_sum_layer(str, layer_num, count, input_width, output_width, input_cols, pool_cols, pool_rows):
+def gen_pool_sum_layer(state, count, input_width, output_width, input_cols, pool_cols, pool_rows):
     row_in_width  = count*input_cols*input_width
     row_out_width = count*(input_cols//pool_cols)*output_width
 
@@ -128,10 +174,6 @@ def gen_pool_sum_layer(str, layer_num, count, input_width, output_width, input_c
         clk         => clk,
         reset       => reset,
 
-        w_en        => w_en,
-        w_in        => w_pass($I),
-        w_out       => w_pass($Inext),
-
         row_in      => row_$I,
         ready       => rd_pass($I),
 
@@ -142,8 +184,8 @@ def gen_pool_sum_layer(str, layer_num, count, input_width, output_width, input_c
     $inst_gen""")
 
     inst = inst_temp.safe_substitute(
-        I           = layer_num,
-        Inext       = layer_num + 1,
+        I           = state[1],
+        Inext       = state[1] + 1,
         count       = count,
         input_width = input_width,
         output_width = output_width,
@@ -156,16 +198,16 @@ def gen_pool_sum_layer(str, layer_num, count, input_width, output_width, input_c
     $sig_gen""")
 
     sig = sig_temp.safe_substitute(
-        Inext         = layer_num + 1,
+        Inext         = state[1] + 1,
         row_out_width = row_out_width
     )
 
-    str = Template(str).safe_substitute(sig_gen=sig, inst_gen=inst)
+    str = Template(state[0]).safe_substitute(sig_gen=sig, inst_gen=inst)
 
-    return (str, layer_num+1)
+    return (str, state[1]+1, state[2])
 
 ###############################################################################
-def gen_act_layer(str, layer_num, count, input_width, input_cols):
+def gen_act_layer(state, count, input_width, input_cols):
     row_in_width  = count*input_cols*input_width
     row_out_width = count*input_cols
 
@@ -179,10 +221,6 @@ def gen_act_layer(str, layer_num, count, input_width, input_cols):
         clk         => clk,
         reset       => reset,
 
-        w_en        => w_en,
-        w_in        => w_pass($I),
-        w_out       => w_pass($Inext),
-
         row_in      => row_$I,
         ready       => rd_pass($I),
 
@@ -193,8 +231,8 @@ def gen_act_layer(str, layer_num, count, input_width, input_cols):
     $inst_gen""")
 
     inst = inst_temp.safe_substitute(
-        I           = layer_num,
-        Inext       = layer_num + 1,
+        I           = state[1],
+        Inext       = state[1] + 1,
         count       = count,
         input_width = input_width,
         input_cols  = input_cols,
@@ -204,16 +242,16 @@ def gen_act_layer(str, layer_num, count, input_width, input_cols):
     $sig_gen""")
 
     sig = sig_temp.safe_substitute(
-        Inext         = layer_num + 1,
+        Inext         = state[1] + 1,
         row_out_width = row_out_width
     )
 
-    str = Template(str).safe_substitute(sig_gen=sig, inst_gen=inst)
+    str = Template(state[0]).safe_substitute(sig_gen=sig, inst_gen=inst)
 
-    return (str, layer_num+1)
+    return (str, state[1]+1, state[2])
 
 ###############################################################################
-def gen_act_uthres_layer(str, layer_num, count, input_width, input_cols, threshold):
+def gen_act_uthres_layer(state, count, input_width, input_cols, threshold):
     row_in_width  = count*input_cols*input_width
     row_out_width = count*input_cols
 
@@ -228,10 +266,6 @@ def gen_act_uthres_layer(str, layer_num, count, input_width, input_cols, thresho
         clk         => clk,
         reset       => reset,
 
-        w_en        => w_en,
-        w_in        => w_pass($I),
-        w_out       => w_pass($Inext),
-
         row_in      => row_$I,
         ready       => rd_pass($I),
 
@@ -242,8 +276,8 @@ def gen_act_uthres_layer(str, layer_num, count, input_width, input_cols, thresho
     $inst_gen""")
 
     inst = inst_temp.safe_substitute(
-        I           = layer_num,
-        Inext       = layer_num + 1,
+        I           = state[1],
+        Inext       = state[1] + 1,
         count       = count,
         input_width = input_width,
         input_cols  = input_cols,
@@ -254,33 +288,29 @@ def gen_act_uthres_layer(str, layer_num, count, input_width, input_cols, thresho
     $sig_gen""")
 
     sig = sig_temp.safe_substitute(
-        Inext         = layer_num + 1,
+        Inext         = state[1] + 1,
         row_out_width = row_out_width
     )
 
-    str = Template(str).safe_substitute(sig_gen=sig, inst_gen=inst)
+    str = Template(state[0]).safe_substitute(sig_gen=sig, inst_gen=inst)
 
-    return (str, layer_num+1)
+    return (str, state[1]+1, state[2])
 
 ###############################################################################
-def gen_fc_layer(str, layer_num, count, output_width, input_cols, input_rows):
-    row_in_width  = input_cols
-    row_out_width = count*output_width
+def gen_act_sthres_layer(state, count, input_width, input_cols, threshold):
+    row_in_width  = count*input_cols*input_width
+    row_out_width = count*input_cols
 
-    inst_temp = Template("""layer_${I}_fc_inst: entity work.bnn_fc_layer
+    inst_temp = Template("""layer_${I}_act_sthres_inst: entity work.row_activation_sthreshold_layer
     generic map (
         COUNT       => $count,
-        OUTPUT_WIDTH => $output_width,
+        INPUT_WIDTH => $input_width,
         INPUT_COLS  => $input_cols,
-        INPUT_ROWS  => $input_rows
+        THRESHOLD   => $threshold
     )
     port map (
         clk         => clk,
         reset       => reset,
-
-        w_en        => w_en,
-        w_in        => w_pass($I),
-        w_out       => w_pass($Inext),
 
         row_in      => row_$I,
         ready       => rd_pass($I),
@@ -292,28 +322,81 @@ def gen_fc_layer(str, layer_num, count, output_width, input_cols, input_rows):
     $inst_gen""")
 
     inst = inst_temp.safe_substitute(
-        I           = layer_num,
-        Inext       = layer_num + 1,
+        I           = state[1],
+        Inext       = state[1] + 1,
         count       = count,
-        output_width = output_width,
+        input_width = input_width,
         input_cols  = input_cols,
-        input_rows  = input_rows
+        threshold   = threshold
     )
 
     sig_temp = Template("""signal row_$Inext : std_logic_vector($row_out_width-1 downto 0);
     $sig_gen""")
 
     sig = sig_temp.safe_substitute(
-        Inext         = layer_num + 1,
+        Inext         = state[1] + 1,
         row_out_width = row_out_width
     )
 
-    str = Template(str).safe_substitute(sig_gen=sig, inst_gen=inst)
+    str = Template(state[0]).safe_substitute(sig_gen=sig, inst_gen=inst)
 
-    return (str, layer_num+1)
+    return (str, state[1]+1, state[2])
 
 ###############################################################################
-def gen_arg_max_layer(str, layer_num, count, input_width, output_width):
+def gen_fc_layer(state, count_in, count_out, output_width, input_cols, input_rows):
+    row_in_width  = count_in*input_cols
+    row_out_width = count_out*output_width
+
+    weights = state[2].read(count_in*count_out*input_cols*input_rows)
+
+    inst_temp = Template("""layer_${I}_fc_inst: entity work.bnn_fc_layer
+    generic map (
+        COUNT_IN    => $count_in,
+        COUNT_OUT   => $count_out,
+        OUTPUT_WIDTH => $output_width,
+        INPUT_COLS  => $input_cols,
+        INPUT_ROWS  => $input_rows
+    )
+    port map (
+        clk         => clk,
+        reset       => reset,
+
+        weights     => "$weights",
+
+        row_in      => row_$I,
+        ready       => rd_pass($I),
+
+        row_out     => row_$Inext,
+        done        => rd_pass($Inext)
+    );
+
+    $inst_gen""")
+
+    inst = inst_temp.safe_substitute(
+        I           = state[1],
+        Inext       = state[1] + 1,
+        count_in    = count_in,
+        count_out   = count_out,
+        output_width = output_width,
+        input_cols  = input_cols,
+        input_rows  = input_rows,
+        weights     = weights
+    )
+
+    sig_temp = Template("""signal row_$Inext : std_logic_vector($row_out_width-1 downto 0);
+    $sig_gen""")
+
+    sig = sig_temp.safe_substitute(
+        Inext         = state[1] + 1,
+        row_out_width = row_out_width
+    )
+
+    str = Template(state[0]).safe_substitute(sig_gen=sig, inst_gen=inst)
+
+    return (str, state[1]+1, state[2])
+
+###############################################################################
+def gen_arg_max_layer(state, count, input_width, output_width):
     row_in_width  = count*input_width
     row_out_width = output_width
 
@@ -327,10 +410,6 @@ def gen_arg_max_layer(str, layer_num, count, input_width, output_width):
         clk         => clk,
         reset       => reset,
 
-        w_en        => w_en,
-        w_in        => w_pass($I),
-        w_out       => w_pass($Inext),
-
         row_in      => row_$I,
         ready       => rd_pass($I),
 
@@ -341,8 +420,8 @@ def gen_arg_max_layer(str, layer_num, count, input_width, output_width):
     $inst_gen""")
 
     inst = inst_temp.safe_substitute(
-        I           = layer_num,
-        Inext       = layer_num + 1,
+        I           = state[1],
+        Inext       = state[1] + 1,
         count       = count,
         input_width = input_width,
         output_width = output_width
@@ -352,19 +431,19 @@ def gen_arg_max_layer(str, layer_num, count, input_width, output_width):
     $sig_gen""")
 
     sig = sig_temp.safe_substitute(
-        Inext         = layer_num + 1,
+        Inext         = state[1] + 1,
         row_out_width = row_out_width
     )
 
-    str = Template(str).safe_substitute(sig_gen=sig, inst_gen=inst)
+    str = Template(state[0]).safe_substitute(sig_gen=sig, inst_gen=inst)
 
-    return (str, layer_num+1)
+    return (str, state[1]+1, state[2])
 
 ###############################################################################
 
-def gen_output(str, layer_num):
-    str = Template(str).safe_substitute(
-        num_layers  = layer_num,
+def gen_output(state):
+    str = Template(state[0]).safe_substitute(
+        num_layers  = state[1],
         sig_gen     = "",
         inst_gen    = ""
     )

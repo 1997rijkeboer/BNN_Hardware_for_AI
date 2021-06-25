@@ -42,6 +42,8 @@ architecture rtl of row_pool_max is
     signal maxreg : maxreg_t;
     signal outreg : maxreg_t;
 
+    constant OFFSET : integer := INPUT_COLS-OUTPUT_COLS*POOL_COLS;
+
     signal row : integer range 0 to POOL_ROWS-1;
 
 begin
@@ -70,7 +72,7 @@ begin
                 max := MAX_NEG;
 
                 for X in 0 to POOL_COLS-1 loop
-                    index := I*POOL_COLS + X;
+                    index := I*POOL_COLS + X + OFFSET;
                     inp := signed(row_in((index+1)*INPUT_WIDTH-1 downto index*INPUT_WIDTH));
                     if inp > max then
                         max := inp;
@@ -85,7 +87,6 @@ begin
 
     -- Output max
     process (clk)
-        variable max : signed(OUTPUT_WIDTH-1 downto 0);
     begin
         if rising_edge(clk) then
             done <= '0';
@@ -115,7 +116,6 @@ begin
         end if;
     end process;
 
-    --done <= '1' when (ready1 = '1' and row = POOL_ROWS-1) else '0';
 
     -- Output
     process (outreg)

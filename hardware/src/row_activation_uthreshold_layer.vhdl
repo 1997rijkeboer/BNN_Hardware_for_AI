@@ -1,4 +1,4 @@
--- Row-parallel activation/quantization with threshold layer
+-- Row-parallel activation/quantization with threshold layer (UNSIGNED)
 
 library IEEE;
 use IEEE.std_logic_1164.all;
@@ -16,11 +16,6 @@ entity row_activation_uthreshold_layer is
         -- System
         clk         : in  std_logic;
         reset       : in  std_logic;
-
-        -- Weight configuration
-        w_en        : in  std_logic; -- enable shifting
-        w_in        : in  std_logic; -- input
-        w_out       : out std_logic; -- output/passthrough
 
         -- Input data
         row_in      : in  std_logic_vector(COUNT*INPUT_COLS*INPUT_WIDTH-1 downto 0);
@@ -62,6 +57,5 @@ row_activation_uthreshold_gen: for I in 0 to COUNT-1 generate
 end generate;
 
     done <= done_s(0);
-    w_out <= w_in;
 
 end architecture;

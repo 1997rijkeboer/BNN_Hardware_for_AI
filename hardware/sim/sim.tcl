@@ -1,7 +1,8 @@
 #!/usr/bin/tclsh
 # Set simulation inputs from test file
 
-log_wave [get_objects /top_tb/top_inst/row_in /top_tb/top_inst/ready /top_tb/top_inst/row_out /top_tb/top_inst/done /top_tb/top_inst/w_pass /top_tb/top_inst/rd_pass]
+#log_wave [get_objects row_in ready row_out done rd_pass]
+log_wave [get_objects -r]
 
 
 set NUM_ROWS 28
@@ -9,41 +10,11 @@ set period 10
 set halfperiod [expr $period/2]
 
 # Clock & reset
-#add_force clk {0} {1 5} -repeat_every 10
+add_force clk {0} {1 5} -repeat_every 10
 set_value -radix bin reset 1
 run $period
 set_value -radix bin reset 0
 run $period
-
-# Load in weights
-#set fp [open "../bnn_weights.txt" r]
-#set i 0
-
-#set_value -radix bin w_en 1
-#foreach w [lreverse [split [read $fp] ""]] {
-#    if {$w == 0 || $w == 1} {
-#        #puts $w
-#        set_value -radix bin w_in $w
-#        run $period
-#
-#        incr i
-#        if {[expr $i%100] == 0} {
-#            puts $i
-#            if {$i >= 200} {
-#                break
-#            }
-#        }
-#    }
-#}
-#set_value -radix bin w_en 0
-#run $period
-#
-#close $fp
-# 494 * 100 > 49362
-for {set i 0} {$i < 494} {incr i} {
-    puts $i
-    run [expr $period * 100]
-}
 
 
 # Perform tests
@@ -55,7 +26,6 @@ set numtests [lindex $testdata 0]
 for {set i 0} {$i < $numtests} {incr i} {
     set offset [expr $i*($NUM_ROWS+1)+1]
     set label [lindex $testdata [expr $offset]]
-    puts "Input: $label"
 
     for {set j 0} {$j < $NUM_ROWS} {incr j} {
         set line [lindex $testdata [expr $offset + $j + 1]]
@@ -67,8 +37,9 @@ for {set i 0} {$i < $numtests} {incr i} {
     set_value -radix bin ready 0
     run [expr $period * 10]
 
-    set res [get_value -radix dec row_out]
-    puts "Output: $res\n"
+    set res [get_value -radix unsigned row_out]
+    set dbg [regsub -all "," [get_value -radix dec dbg_row] ",\t"]
+    puts "I: $label    O: $res    $dbg"
 
     set_value -radix bin reset 1
     run $period

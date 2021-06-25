@@ -26,7 +26,6 @@ architecture sim of bnn_row_conv_tb is
     signal clk : std_logic := '0';
     signal reset : std_logic;
 
-    signal w_en, w_in, w_out : std_logic;
     signal row_in  : std_logic_vector(INPUT_COLS-1 downto 0);
     signal ready   : std_logic;
     signal row_out : std_logic_vector((INPUT_COLS-KERNEL_COLS+1)*OUTPUT_WIDTH-1 downto 0);
@@ -46,10 +45,7 @@ dut: entity work.bnn_row_conv
             clk         => clk,
             reset       => reset,
 
-            -- Weight configuration
-            w_en        => w_en,
-            w_in        => w_in,
-            w_out       => w_out,
+            weights     => WEIGHTS,
 
             row_in      => row_in,
             ready       => ready,
@@ -62,23 +58,12 @@ dut: entity work.bnn_row_conv
 
     process
     begin
-        w_en <= '0';
-        w_in <= '0';
         row_in <= (others => '0');
         ready  <= '0';
 
         reset <= '1';
         wait for CLK_PERIOD;
         reset <= '0';
-        wait for CLK_PERIOD;
-
-        for I in 0 to WEIGHTS'length-1 loop
-            w_en <= '1';
-            w_in <= WEIGHTS(I);
-            wait for CLK_PERIOD;
-        end loop;
-        w_en <= '0';
-
         wait for CLK_PERIOD;
 
         for I in 0 to INPUT_ROWS-1 loop

@@ -8,6 +8,7 @@ use IEEE.numeric_std.all;
 
 entity bnn_fc is
     generic (
+        COUNT_IN    : integer;
         OUTPUT_WIDTH : integer;
         INPUT_COLS  : integer;
         INPUT_ROWS  : integer
@@ -18,12 +19,10 @@ entity bnn_fc is
         reset       : in  std_logic;
 
         -- Weight configuration
-        w_en        : in  std_logic; -- enable shifting
-        w_in        : in  std_logic; -- input
-        w_out       : out std_logic; -- output/passthrough
+        weights     : in  std_logic_vector(0 to COUNT_IN*INPUT_COLS*INPUT_ROWS-1);
 
         -- Input data
-        row_in      : in  std_logic_vector(INPUT_COLS-1 downto 0);
+        row_in      : in  std_logic_vector(COUNT_IN*INPUT_COLS-1 downto 0);
         ready       : in  std_logic;
 
         -- Output data
@@ -39,8 +38,7 @@ architecture rtl of bnn_fc is
     signal ready1 : std_logic;
 
     -- Weights
-    constant NUM_WEIGHTS : integer := INPUT_COLS * INPUT_ROWS;
-    signal weights : std_logic_vector(0 to NUM_WEIGHTS-1); -- := (others => '0');
+    constant NUM_WEIGHTS : integer := COUNT_IN * INPUT_COLS * INPUT_ROWS;
 
     -- Sum/output
     signal sumreg : signed(OUTPUT_WIDTH-1 downto 0);
@@ -49,20 +47,6 @@ architecture rtl of bnn_fc is
     signal row : integer range 0 to INPUT_ROWS-1;
 
 begin
-
-    -- Weights shift register
-    process (clk)
-    begin
-        if rising_edge(clk) and w_en = '1' then
-            weights(0) <= w_in;
-            if NUM_WEIGHTS > 1 then -- don't shift internally for 1x1 kernels
-                weights(1 to NUM_WEIGHTS-1) <= weights(0 to NUM_WEIGHTS-2);
-            end if;
-        end if;
-    end process;
-
-    w_out <= weights(NUM_WEIGHTS-1);
-
 
     -- Delayed ready
     process (clk)
@@ -78,20 +62,24 @@ begin
 
 
     -- Input sum
-    process (clk)
+    process (clk, ready)
         variable mul : std_logic;
         variable sum : signed(OUTPUT_WIDTH-1 downto 0);
+        variable index : integer;
     begin
         if rising_edge(clk) and ready = '1' then
             sum := (others => '0');
 
-            for I in 0 to INPUT_COLS-1 loop
-                mul := WEIGHTS(row*INPUT_COLS + I) xnor row_in(I);
-                if mul = '1' then
-                    sum := sum + 1;
-                else
-                    sum := sum - 1;
-                end if;
+            for I in 0 to COUNT_IN-1 loop
+                for J in 0 to INPUT_COLS-1 loop
+                    index := row*INPUT_COLS*COUNT_IN + I*INPUT_COLS + J;
+                    mul := weights(index) xnor row_in((COUNT_IN-I)*INPUT_COLS-1-J);
+                    if mul = '1' then
+                        sum := sum + 1;
+                    else
+                        sum := sum - 1;
+                    end if;
+                end loop;
             end loop;
 
             sumreg <= sum;
@@ -102,15 +90,13 @@ begin
     -- Output sum
 MULTI_ROW: if INPUT_ROWS /= 1 generate
     process (clk)
-        variable sum : signed(OUTPUT_WIDTH-1 downto 0);
     begin
         if rising_edge(clk) then
             --done <= '0';
             if reset = '1' then
                 row <= 0;
                 done <= '0';
-                outreg <= (others => '0');
-            elsif ready1 = '1' then
+            elsif ready = '1' then
                 if row = INPUT_ROWS-1 then
                     row <= 0;
                     done <= '1';
@@ -118,8 +104,12 @@ MULTI_ROW: if INPUT_ROWS /= 1 generate
                     row <= row + 1;
                     done <= '0';
                 end if;
+            end if;
 
-                if row = 0 then
+            if reset = '1' then
+                outreg <= (others => '0');
+            elsif ready1 = '1' then
+                if row = 1 then
                     outreg <= sumreg;
                 else
                     outreg <= outreg + sumreg;
@@ -143,6 +133,5 @@ end generate;
 
     -- Output
     row_out <= std_logic_vector(outreg);
-
 
 end architecture;

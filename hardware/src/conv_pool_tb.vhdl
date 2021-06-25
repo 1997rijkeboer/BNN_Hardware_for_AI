@@ -32,7 +32,6 @@ architecture sim of conv_pool_tb is
     signal clk : std_logic := '0';
     signal reset : std_logic;
 
-    signal w_en, w_in, w_conv, w_out : std_logic;
     signal row_in       : std_logic_vector(INPUT_COLS-1 downto 0);
     signal ready_in     : std_logic;
 
@@ -57,9 +56,7 @@ conv_inst: entity work.bnn_row_conv
         clk         => clk,
         reset       => reset,
 
-        w_en        => w_en,
-        w_in        => w_in,
-        w_out       => w_conv,
+        weights     => WEIGHTS,
 
         row_in      => row_in,
         ready       => ready_in,
@@ -91,23 +88,12 @@ pool_inst: entity work.row_pool_max
 
     process
     begin
-        w_en <= '0';
-        w_in <= '0';
         row_in <= (others => '0');
         ready_in  <= '0';
 
         reset <= '1';
         wait for CLK_PERIOD;
         reset <= '0';
-        wait for CLK_PERIOD;
-
-        for I in 0 to WEIGHTS'length-1 loop
-            w_en <= '1';
-            w_in <= WEIGHTS(I);
-            wait for CLK_PERIOD;
-        end loop;
-        w_en <= '0';
-
         wait for CLK_PERIOD;
 
         for I in 0 to INPUT_ROWS-1 loop

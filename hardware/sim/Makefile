@@ -1,5 +1,5 @@
 
-TOP=top_tb
+TOP=top
 SIM=sim
 PRJ=sources.prj
 SRC=$(filter-out vhdl work,$(shell cat $(PRJ)))
@@ -27,7 +27,10 @@ isim:
 	xsim --t wave.tcl $(SIM) --gui
 
 
-$(SIM).wdb: sim.tcl xelab.pb
+testdata.txt: generate_testdata.py
+	./$<
+
+$(SIM).wdb: sim.tcl xelab.pb testdata.txt
 	xsim --t sim.tcl $(SIM) | sed '/^##.*$$/d'
 
 xelab.pb: $(SRC)
