@@ -25,7 +25,7 @@ state = gen_pool_max_layer(state, conv2, 10, 10, 11, 2, 2)
 state = gen_act_layer(state, conv2, 10, 5)
 
 state = gen_fc_layer(state, conv2, 10, 20, 5, 5)
-state = gen_arg_max_layer(state, 10, 20, 4) #count, inputwidth, outputwidth = 4 bits as count = 10
+state = gen_arg_max_layer(state, 10, 20, 4)
 
 str = gen_output(state)
 
